@@ -28,7 +28,7 @@ ModelSetting = P.ModelSetting
 #########################################################
 
 class LogicServer(LogicModuleBase):
-    db_default = {
+    db_default = {    
         'server_db_version' : '1',
         'server_chrome_mode_is_remote' : 'True',
         'base_chrome_url' : '',
