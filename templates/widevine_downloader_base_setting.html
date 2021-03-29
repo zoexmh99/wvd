@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div>
+  {{ macros.m_button_group([['global_setting_save_btn', '설정 저장']])}}
+  {{ macros.m_row_start('5') }}
+  {{ macros.m_row_end() }}
+  <nav>
+    {{ macros.m_tab_head_start() }}
+      {{ macros.m_tab_head2('normal', '설정', true) }}
+      {{ macros.m_tab_head2('auto', '자동 & 기타', false) }}
+      {{ macros.m_tab_head2('test', '테스트', false) }}
+    {{ macros.m_tab_head_end() }}
+  </nav>
+  <form id='setting' name='setting'>
+  <div class="tab-content" id="nav-tabContent">
+    {{ macros.m_tab_content_start('normal', true) }}
+      {{ macros.setting_input_textarea_and_buttons('basic_download_path', '다운로드 폴더', [['basic_download_path_add_btn', '경로추가']], desc=['영화 영상을 다운받은 폴더입니다.', '2개 이상일 경우 , 구분자 엔터'], value=arg['basic_download_path'], row='3') }}
+
+    {{ macros.m_tab_content_end() }}  
+
+    {{ macros.m_tab_content_start('auto', false) }}
+      {{ macros.setting_global_scheduler_sub_button(arg['scheduler'], arg['is_running']) }}
+      {{ macros.setting_input_text('basic_interval', '스케쥴링 실행 정보', value=arg['basic_interval'], col='3', desc=['Inverval(minute 단위)이나 Cron 설정']) }}
+      {{ macros.setting_checkbox('basic_auto_start', '시작시 자동실행', value=arg['basic_auto_start'], desc='On : 시작시 자동으로 스케쥴러에 등록됩니다.') }}
+      {{ macros.m_hr() }}
+      {{ macros.setting_button([['global_one_execute_sub_btn', '1회 실행']], left='1회 실행' ) }}
+      {{ macros.setting_button([['global_reset_db_sub_btn', 'DB 초기화']], left='DB정리' ) }}
+  
+    {{ macros.m_tab_content_end() }}
+
+    {{ macros.m_tab_content_start('test', false) }}
+      {{ macros.setting_input_text_and_buttons('basic_test_value', '테스트', [['basic_test_value_select_btn', '선택'], ['basic_test_value_test_btn', '테스트']], value=arg['basic_test_value'], desc=['파일명이나 폴더명을 직접 입력하거나 파일 선택 모달창을 이용하여 선택']) }}
+    {{ macros.m_tab_content_end() }}
+
+  </div><!--tab-content-->
+  </form>
+</div> <!--전체-->
+
+
+
+<script type="text/javascript">
+var package_name = "{{arg['package_name'] }}";
+var sub = "{{arg['sub'] }}";
+
+$(document).ready(function(){
+  use_collapse("jav_censored_include_original_filename");
+  use_meta(parseInt("{{arg['jav_censored_use_meta']}}"));
+});
+
+
+$("body").on('click', '#basic_download_path_add_btn', function(e){
+  e.preventDefault();
+  m_select_local_file_modal("다운로드 폴더 추가", '/', true, function(result){
+    var data = $("#basic_download_path").val();
+    if (data.length > 0) {
+        $('#basic_download_path').val(data + '\n' + result)
+    } else {
+        $('#basic_download_path').val(result);
+    }
+  });
+});
+
+$("body").on('click', '#basic_test_value_select_btn', function(e){
+  e.preventDefault();
+  m_select_local_file_modal("테스트용 폴더나 파일 선택", '/', false, function(result){
+    var tmp = result.split('/');
+    $('#basic_test_value').val(tmp[tmp.length-1]);
+  });
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+$('#jav_censored_include_original_filename').change(function() {
+  use_collapse('jav_censored_include_original_filename');
+});
+
+$('input[type=radio][name=jav_censored_use_meta]').change(function() {
+  use_meta(this.value);
+});
+
+function use_meta(value) {
+  if (value == 0) {
+    $('#jav_censored_use_meta_on_div').collapse('hide');
+    $('#jav_censored_use_meta_off_div').collapse('show');
+  } else {
+    $('#jav_censored_use_meta_on_div').collapse('show');
+    $('#jav_censored_use_meta_off_div').collapse('hide');
+  }
+}
+
+$("body").on('click', '#jav_censored_filename_test_btn', function(e){
+  e.preventDefault();
+  filename = document.getElementById("jav_censored_filename_test").value;
+  $.ajax({
+    url: '/' + package_name + '/ajax/' + sub + '/filename_test',
+    type: "POST", 
+    cache: false,
+    data: {filename:filename},
+    dataType: "json",
+    success: function (ret) {
+      m_modal(ret)
+    }
+  });
+});
+
+</script>    
+{% endblock %}
