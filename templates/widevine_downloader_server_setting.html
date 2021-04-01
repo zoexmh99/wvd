@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div>
+  {{ macros.m_button_group([['global_setting_save_btn', '설정 저장']])}}
+  {{ macros.m_row_start('5') }}
+  {{ macros.m_row_end() }}
+  <nav>
+    {{ macros.m_tab_head_start() }}
+      {{ macros.m_tab_head2('normal', '설정', true) }}
+      {{ macros.m_tab_head2('auto', '자동 & 기타', false) }}
+      {{ macros.m_tab_head2('test', '테스트', false) }}
+    {{ macros.m_tab_head_end() }}
+  </nav>
+  <form id='setting' name='setting'>
+  <div class="tab-content" id="nav-tabContent">
+    {{ macros.m_tab_content_start('normal', true) }}
+      {{ macros.setting_checkbox('server_chromedriver_auto_start', 'chromedriver 자동 실행', value=arg['server_chromedriver_auto_start'], desc=['On : SJVA 시작시 자동 실행']) }}
+
+      {{ macros.setting_input_int('server_port', 'chromedriver Port', value=arg['server_port'], desc=['chromedriver 대기 포트']) }}
+      {{ macros.setting_checkbox('server_remote_allow', 'chromedriver 외부접속', value=arg['server_remote_allow'], desc=['On : 외부접속 가능', 'Off : 로컬만 가능(client도 윈도우에서 동작)']) }}
+      {{ macros.info_text_and_buttons('server_chromedriver_status', '동작 상태', [['command_chromedriver_run_btn', '실행'], ['command_chromedriver_stop_btn', '중지']], value=arg['server_chromedriver_status'], desc=None) }}
+      {{ macros.m_hr() }}
+
+      {{ macros.setting_button([['command_chromedriver_test_btn', '크롬 실행'], ['command_chromedriver_test_headless_btn', '크롬 Headless 실행'], ['command_chromedriver_test_stop_btn', '크롬 중지']], '크롬 실행 테스트') }}
+      {{ macros.setting_input_text_and_buttons('server_test_url', 'URL Go', [['command_chrome_go_btn', 'GO']], value=arg['server_test_url']) }}
+      <!--{{ macros.setting_radio('server_test_netflix_video', '넷플릭스 비디오 테스트', ['AVC Main', 'AVC High', 'VP9'], value=arg['server_test_netflix_video']) }}-->
+    {{ macros.m_tab_content_end() }}  
+
+
+
+  </div><!--tab-content-->
+  </form>
+</div> <!--전체-->
+
+
+
+<script type="text/javascript">
+var package_name = "{{arg['package_name'] }}";
+var sub = "{{arg['sub'] }}";
+
+$(document).ready(function(){
+});
+
+
+$("body").on('click', '#command_chromedriver_run_btn', function(e){
+  e.preventDefault();
+  command('run');
+});
+
+$("body").on('click', '#command_chromedriver_stop_btn', function(e){
+  e.preventDefault();
+  command('stop');
+});
+
+$("body").on('click', '#command_chromedriver_test_btn', function(e){
+  e.preventDefault();
+  command('test');
+});
+
+$("body").on('click', '#command_chromedriver_test_headless_btn', function(e){
+  e.preventDefault();
+  command('test', 'headless');
+});
+
+$("body").on('click', '#command_chromedriver_test_stop_btn', function(e){
+  e.preventDefault();
+  command('chrome_stop');
+});
+
+$("body").on('click', '#command_chrome_go_btn', function(e){
+  e.preventDefault();
+  command('go', $('#server_test_url').val());
+});
+
+
+
+function command(cmd, data=null) {
+  $.ajax({
+    url: '/' + package_name + '/ajax/' + sub + '/command',
+    type: "POST", 
+    cache: false,
+    data: {cmd:cmd, data:data},
+    dataType: "json",
+    success: function (ret) {
+      console.log(ret);
+      notify(ret['msg'], ret['ret']);  
+      if (cmd == 'run' || cmd == 'stop') {
+        $('#server_chromedriver_status').html(ret['data']);
+      }
+    }
+  });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+$('#jav_censored_include_original_filename').change(function() {
+  use_collapse('jav_censored_include_original_filename');
+});
+
+$('input[type=radio][name=jav_censored_use_meta]').change(function() {
+  use_meta(this.value);
+});
+
+function use_meta(value) {
+  if (value == 0) {
+    $('#jav_censored_use_meta_on_div').collapse('hide');
+    $('#jav_censored_use_meta_off_div').collapse('show');
+  } else {
+    $('#jav_censored_use_meta_on_div').collapse('show');
+    $('#jav_censored_use_meta_off_div').collapse('hide');
+  }
+}
+
+$("body").on('click', '#jav_censored_filename_test_btn', function(e){
+  e.preventDefault();
+  filename = document.getElementById("jav_censored_filename_test").value;
+  $.ajax({
+    url: '/' + package_name + '/ajax/' + sub + '/filename_test',
+    type: "POST", 
+    cache: false,
+    data: {filename:filename},
+    dataType: "json",
+    success: function (ret) {
+      m_modal(ret)
+    }
+  });
+});
+
+</script>    
+{% endblock %}

@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div>
+  {{ macros.m_button_group([['global_setting_save_btn', '큐 저장'], ['start_btn', '시작'], ['stop_btn', '중지'], ['log_reset_btn', '로그 리셋']]) }}
+  <form id='setting' name='setting'>
+  {{ macros.setting_input_textarea('gclone_queue_list', '작업 큐', desc=[ 
+    '작업이 정상적으로 완료되면 제외됩니다.',
+    '형식 : 소스|타켓 #주석.  구분자 Enter',
+    ], 
+    value=arg['gclone_queue_list'], row='5') }}
+  </form>
+  {{ macros.m_hr() }}
+  {{ macros.info_text_and_buttons('status', '상태',  [], value='') }}
+  {{ macros.setting_input_textarea('command', '현재명령', row='3') }}
+  {{ macros.setting_progress('data_progress', '전송량') }}
+  {{ macros.setting_progress('file_progress', 'Transferred') }}
+  {{ macros.info_text('trans_speed', '전송 속도') }}
+  {{ macros.info_text('rt_time', '전체 남은 시간') }}
+  {{ macros.info_text('r_time', '진행 시간') }}
+  {{ macros.info_text('checks', 'Checks') }}
+  {{ macros.info_text('error', 'Errors') }}
+  <div id="log_list_div"></div>
+</div> <!--전체-->
+
+
+<script type="text/javascript">
+var package_name = "{{arg['package_name'] }}";
+var sub = "{{arg['sub'] }}";
+var protocol = window.location.protocol;
+socket = io.connect(protocol + "//" + document.domain + ":" + location.port + "/" + package_name + '/' + sub);
+
+$(document).ready(function(){
+  
+});
+  
+socket.on('connect', function(data){
+  if (data != null) {
+    on_start(data);
+    on_log(data);
+    on_status(data)
+  }
+});
+
+socket.on('start', function(data){
+  on_start(data);
+});
+
+socket.on('files', function(data) {
+});
+
+socket.on('status', function(data){
+  on_status(data)
+});
+
+socket.on('log', function(data){
+  on_log(data);
+});
+  
+socket.on('refresh_queue', function(data){
+  document.getElementById("gclone_queue_list").value = data;
+});
+
+
+$("body").on('click', '#start_btn', function(e){
+  e.preventDefault();
+  $.ajax({
+    url: '/' + package_name + '/ajax/' + sub + '/start',
+    type: "POST", 
+    cache: false,
+    data:{},
+    dataType: "json",
+    success: function (data) {
+      if (data == 'success') {
+        $.notify('<strong>시작하였습니다.</strong>', {type: 'success'});
+      } else if (data == 'already_running') {
+        $.notify('<strong>이미 실행중입니다.</strong>', {type: 'success'});
+      } else {
+        $.notify('<strong>시작 실패</strong>', {type: 'warning'});
+      }
+    }
+  });
+});
+
+$("body").on('click', '#stop_btn', function(e){
+  e.preventDefault();
+  $.ajax({
+    url: '/' + package_name + '/ajax/' + sub + '/stop',
+    type: "POST", 
+    cache: false,
+    data:{},
+    dataType: "json",
+    success: function (data) {
+      if (data == 'success') {
+        $.notify('<strong>중지하였습니다.</strong>', {
+          type: 'success'
+        });
+      } else if (data == 'not_running') {
+        $.notify('<strong>실행중이 아닙니다.</strong>', {
+          type: 'success'
+        });
+      } else {
+        $.notify('<strong>중지 실패</strong>', {
+          type: 'warning'
+        });
+      }
+    }
+  });
+});
+
+$("body").on('click', '#log_reset_btn', function(e){
+  e.preventDefault();
+  $.ajax({
+    url: '/' + package_name + '/ajax/' + sub + '/log_reset',
+    type: "POST", 
+    cache: false,
+    data:{},
+    dataType: "json",
+    success: function (data) {
+    }
+  });
+});
+
+
+
+function on_start(data) {
+  if (data.status == 'ready') str = '준비';
+  else if (data.status == 'is_running') str = '실행중';
+  document.getElementById("status").innerHTML = str;
+  document.getElementById("command").value = data.command
+}
+
+function on_log(data) {
+  data = data.log
+  if (data == null)
+    return
+  str = m_hr_black()
+  str += m_row_start_top();
+  tmp = '<pre>';
+  for (i in data.reverse()) {
+    tmp += data[i] + '\n';
+  }
+  tmp += '</pre>';
+  str += m_col(12, tmp);
+  str += m_row_end();
+  document.getElementById("log_list_div").innerHTML = str;
+}
+
+function on_status(data) {
+  if (data.ts != null) {
+    document.getElementById("data_progress").style.width = data.ts.trans_percent+ '%';
+    document.getElementById("data_progress_label").innerHTML = data.ts.trans_data_current + ' / ' + data.ts.trans_total_size + ' (' + data.ts.trans_percent+ '%)';
+    document.getElementById("file_progress").style.width = data.ts.file_percent+ '%';
+    document.getElementById("file_progress_label").innerHTML = data.ts.file_1 + ' / ' + data.ts.file_2 + ' (' + data.ts.file_percent+ '%)';
+    document.getElementById("trans_speed").innerHTML = data.ts.trans_speed;
+    
+    document.getElementById("rt_time").innerHTML =((data.ts.rt_hour == null) ? "00" : FormatNumberLength(data.ts.rt_hour, 2)) + ':' + ((data.ts.rt_min == null) ? "00" : FormatNumberLength(data.ts.rt_min, 2)) + ':' + ((data.ts.rt_sec == null) ? "00" : FormatNumberLength(data.ts.rt_sec, 2))
+
+    document.getElementById("r_time").innerHTML =((data.ts.r_hour == null) ? "00" : FormatNumberLength(data.ts.r_hour, 2)) + ':' + ((data.ts.r_min == null) ? "00" : FormatNumberLength(data.ts.r_min, 2)) + ':' + ((data.ts.r_sec == null) ? "00" : FormatNumberLength(data.ts.r_sec, 2))
+    document.getElementById("checks").innerHTML = data.ts.check_1 + ' / ' + data.ts.check_2 + ' (' + data.ts.check_percent + ' %)';
+    document.getElementById("error").innerHTML = data.ts.error;
+  }
+}
+</script>    
+{% endblock %}
