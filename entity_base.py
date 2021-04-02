@@ -26,8 +26,34 @@ from .utility import Utility
 
 class EntityBase(object):
     
+    def __init__(self, data):
+        self.temp_dir = os.path.join(Utility.tmp_dir, self.name)
+        if os.path.exists(self.temp_dir) == False:
+            os.makedirs(self.temp_dir)
+        self.data = data
+        self.code = data['code']
+        self.default_process()
+
     def find_key(self, kid):
         for key in reversed(self.data['key']):
             if kid == key['kid']:
                 return key['key']
+
+    def find_mpd(self):
+        logger.debug('Find mpd..')
+        request_list = self.data['har']['log']['entries']
+        for item in request_list:
+            if item['request']['method'] == 'GET' and item['request']['url'].find('.mpd') != -1:
+                self.mpd_url = item['request']['url']
+                logger.debug(self.mpd_url)
+                from mpegdash.parser import MPEGDASHParser
+                mpd = MPEGDASHParser.parse(self.mpd_url)
+                logger.debug(mpd)
+                logger.debug(MPEGDASHParser.toprettyxml(mpd))
+                MPEGDASHParser.write(mpd, os.path.join(self.temp_dir, '{}.mpd'.format(self.code)))
+
+    def default_process(self):
+        logger.debug(u'공통 처리')
+        self.find_mpd()
+
 

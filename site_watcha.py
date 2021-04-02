@@ -37,17 +37,15 @@ prime_headers = {
 }
 
 
+class EntityWatcha(EntityBase):
+    url_regex = re.compile(r'watcha\.com\/watch\/(?P<code>.*?)$')
+    name = 'watcha'
 
 
-class EntityPrime(EntityBase):
-    url_regex = re.compile(r'www\.primevideo\.com(.*?)detail\/(?P<code>.*?)[\/$]')
-    name = 'prime'
 
     def __init__(self, data):
-        super(EntityPrime, self).__init__(data)
-   
-        self.data = None
-        self.code = None
+        super(EntityWatcha, self).__init__(data)
+
         self.meta = None
         self.show_title = None
         self.season_number = None
@@ -67,14 +65,13 @@ class EntityPrime(EntityBase):
 
         self.default_language = None
         self.set_data(data)
+        
 
 
     def start_process_video_result(self):
         logger.debug(u'프라임 비디오 시작')
         #self.set_data(data)
-        self.find_mpd()
-        
-        return
+
         logger.debug(u'자막 다운로드..')
         self.download_subtitle()
 
@@ -91,10 +88,20 @@ class EntityPrime(EntityBase):
 
 
     def set_data(self, data):
-        self.data = data
-        self.code = data['code']
+        for period in self.mpd.period:
+            logger.debug(period)
+            for adaptation_set in period.adaptation_sets:
+                logger.debug(adaptation_set)
+                logger.debug(adaptation_set.content_type)
+
+
+
+
         request_list = self.data['har']['log']['entries']
         for item in request_list:
+
+
+
             if self.meta is None and item['request']['method'] == 'POST' and item['request']['url'].find('GetPlaybackResources') != -1:
                 cookie = ''
                 for tmp in self.data['cookie']:
@@ -111,7 +118,7 @@ class EntityPrime(EntityBase):
                 self.mp4_info['audio']['url'] = item['request']['url']
                 self.mp4_info['audio']['download_url'] = self.mp4_info['audio']['url']
                 self.mp4_info['audio']['codec'] = 'AAC'
-            
+                
         
 
     def set_meta(self, meta):

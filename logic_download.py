@@ -28,7 +28,7 @@ from .utility import Utility
 #########################################################
 
 from .site_prime import EntityPrime
-
+from .site_watcha import EntityWatcha
 
 class LogicDownload(LogicModuleBase):
     db_default = {
@@ -38,9 +38,8 @@ class LogicDownload(LogicModuleBase):
         'download_queue_list' : '',
     }
 
-    module_map = {'prime' : EntityPrime} 
-    url_regex = {'prime' : re.compile(r'www\.primevideo\.com(.*?)detail\/(?P<code>.*?)\/') }
-
+    site_list = [EntityPrime, EntityWatcha]
+    
 
     def __init__(self, P):
         super(LogicDownload, self).__init__(P, 'queue')
@@ -134,11 +133,18 @@ class LogicDownload(LogicModuleBase):
     def process_video_result(self, data):
         # video
         filename = '%s.json' % Util.change_text_for_use_filename(data['url'])[:100]
-        for site, regex in self.url_regex.items():
-            match = regex.search(data['url'])
+        logger.debug('1111111111111111')
+        logger.debug(filename)
+        for site in self.site_list:
+            logger.debug([data['url']])
+            logger.debug(site.url_regex)
+            match = site.url_regex.search(data['url'])
+            logger.debug(site.url_regex)
+
             if match:
-                filename = '%s_%s.json' % (site, match.group('code'))
-                data['site'] = site
+                logger.debug('22222222222222222222222222222222222')
+                filename = '%s_%s.json' % (site.name, match.group('code'))
+                data['site'] = site.name
                 data['code'] = match.group('code')
 
         json_filepath = os.path.join(Utility.json_dir, filename)
@@ -149,28 +155,27 @@ class LogicDownload(LogicModuleBase):
         
     # 여긴 thread로 진입
     def start_video_result(self, data): 
-        logger.debug(self)                   
+        logger.debug(self)   
+        result = self.start_video_result2(data)    
+        return            
         if app.config['config']['use_celery']:
-            result = self.start_video_result0.apply_async((self, data))
+            result = self.start_video_result1.apply_async((self, data))
             logger.debug("Celery 대기")
             result.get() 
             logger.debug("Celery 대기 종료")
             
         else:
-            result = self.start_video_result0(data)
+            result = self.start_video_result2(data)
 
     @celery.task
-    def start_video_result0(self, data):
+    def start_video_result1(self, data):
+        self.start_video_result2(data)
+
+    def start_video_result2(self, data):
         logger.debug(u"비디오 결과 분석 시작")
         logger.debug('URL : %s', data['url'])
 
-        filename = '%s.json' % Util.change_text_for_use_filename(data['url'])[:100]
-        for site, regex in self.url_regex.items():
-            match = regex.search(data['url'])
-            if match:
-                logger.debug(u'사이트 매칭:%s', site)
-                #P.logic.get_module(site).start_process_video_result(data)
-                entity = self.module_map[site](data)
+        for site in self.site_list:
+            if site.name == data['site']:
+                entity = site(data)
                 entity.start_process_video_result()
-
-
