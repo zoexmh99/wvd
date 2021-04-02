@@ -37,7 +37,7 @@ class P(object):
                 ['setting', u'클라이언트 설정'], 
             ],
             'download' : [
-                ['request', u'큐'], ['test', u'테스트'], 
+                ['queue', u'큐'], ['test', u'테스트'], 
             ],
         }
     }  

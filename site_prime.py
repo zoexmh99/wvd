@@ -41,9 +41,10 @@ prime_headers = {
     'Sec-Fetch-Mode': 'cors',
     'Sec-Fetch-Site': 'same-site',
 }
-temp_dir = bin_dir = os.path.join(os.path.dirname(__file__), 'download', 'tmp', 'prime')
-output_dir = bin_dir = os.path.join(os.path.dirname(__file__), 'download', 'output')
 
+temp_dir = os.path.join(Utility.tmp_dir, 'prime')
+if os.path.exists(temp_dir) == False:
+    os.makedirs(temp_dir)
 
 
 class EntityPrime(EntityBase):
@@ -211,7 +212,7 @@ class EntityPrime(EntityBase):
             audio_codec = audio_json['tracks'][0]['sample_descriptions'][0]['mpeg_4_audio_object_type_name'].split(' ')[0],
             video_codec = video_json['tracks'][0]['sample_descriptions'][0]['coding_name']
         )
-        self.output_filepath = os.path.join(output_dir, self.output_filename)
+        self.output_filepath = os.path.join(Utility.output_dir, self.output_filename)
         if os.path.exists(self.output_filepath) == False:
             shutil.move(self.mkv_filepath, self.output_filepath)
             logger.debug('파일 생성: %s', self.output_filename)

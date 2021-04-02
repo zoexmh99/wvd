@@ -36,13 +36,13 @@ if platform.system() != 'Windows':
     ARIA2C = 'aria2c'
     FFMPEG = 'ffmpeg'
     MKVMERGE = 'mkvmerge'
-
+#apt-get install mkvtoolnix
 
 class Utility(object):
-    download_dir = os.path.join(os.path.dirname(__file__), 'download')
-    tmp_dir = os.path.join(os.path.dirname(__file__), 'download', 'tmp')
-    json_dir = os.path.join(os.path.dirname(__file__), 'download', 'json')
-    output_dir = os.path.join(os.path.dirname(__file__), 'download', 'output')
+    download_dir = os.path.join(path_data, 'widevine_downloader')
+    tmp_dir = os.path.join(download_dir, 'tmp')
+    json_dir = os.path.join(download_dir, 'json')
+    output_dir = os.path.join(download_dir, 'output')
 
     
     @classmethod
@@ -51,8 +51,8 @@ class Utility(object):
         try:
             if os.path.exists(filepath):
                 return
-            if platform.system() == 'Windows':
-                filepath = filepath.replace(path_app_root, '.')
+            #if platform.system() == 'Windows':
+            filepath = filepath.replace(path_app_root, '.')
 
             command = [ARIA2C]
             if headers is not None:
@@ -168,6 +168,8 @@ class Utility(object):
     def ttml2srt(cls, source, target):
         try:
             from ttml2srt.ttml2srt import Ttml2Srt
+            logger.debug(source)
+            logger.debug(target)
             ttml = Ttml2Srt(source)
             ttml.write2file(target)
 

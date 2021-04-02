@@ -51,7 +51,9 @@ class LogicClient(LogicModuleBase):
         
         try:
             return render_template('{package_name}_{module_name}_{sub}.html'.format(package_name=P.package_name, module_name=self.name, sub=sub), arg=arg)
-        except:
+        except Exception as e: 
+            P.logger.error('Exception:%s', e)
+            P.logger.error(traceback.format_exc())
             return render_template('sample.html', title='%s - %s' % (P.package_name, sub))
 
 

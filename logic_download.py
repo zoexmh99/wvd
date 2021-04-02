@@ -35,6 +35,7 @@ class LogicDownload(LogicModuleBase):
         'download_db_version' : '1',
         'download_test_send_url' : '',
         'download_test_video_result_json' : '',
+        'download_queue_list' : '',
     }
 
     module_map = {'prime' : EntityPrime} 
@@ -51,7 +52,9 @@ class LogicDownload(LogicModuleBase):
         
         try:
             return render_template('{package_name}_{module_name}_{sub}.html'.format(package_name=P.package_name, module_name=self.name, sub=sub), arg=arg)
-        except:
+        except Exception as e: 
+            P.logger.error('Exception:%s', e)
+            P.logger.error(traceback.format_exc())
             return render_template('sample.html', title='%s - %s' % (P.package_name, sub))
 
 
@@ -73,6 +76,10 @@ class LogicDownload(LogicModuleBase):
                 #thread.daemon = True
                 thread.start()
                 ret['msg'] = u'시작했습니다.'
+            elif sub == 'queue_start':
+                self.queue_start()
+            elif sub =='queue_stop':
+                self.queue_stop()
             return jsonify(ret)
         except Exception as e: 
             P.logger.error('Exception:%s', e)
@@ -102,6 +109,16 @@ class LogicDownload(LogicModuleBase):
 
     #########################################################
 
+    def queue_start(self):
+        queue_list = ModelSetting.get_list('download_queue_list', '\n')
+        for item in queue_list:
+            logger.debug("URL : %s", item)
+            self.send_url(item)
+
+
+    def queue_stop(self):
+        pass
+
 
     def send_url(self, url, is_test=False):
         try:
@@ -128,7 +145,22 @@ class LogicDownload(LogicModuleBase):
         Utility.write_json(data, json_filepath)
         self.start_video_result(data)
 
-    def start_video_result(self, data):
+
+        
+    # 여긴 thread로 진입
+    def start_video_result(self, data): 
+        logger.debug(self)                   
+        if app.config['config']['use_celery']:
+            result = self.start_video_result0.apply_async((self, data))
+            logger.debug("Celery 대기")
+            result.get() 
+            logger.debug("Celery 대기 종료")
+            
+        else:
+            result = self.start_video_result0(data)
+
+    @celery.task
+    def start_video_result0(self, data):
         logger.debug(u"비디오 결과 분석 시작")
         logger.debug('URL : %s', data['url'])
 

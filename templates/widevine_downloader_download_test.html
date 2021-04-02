@@ -14,7 +14,7 @@
   <div class="tab-content" id="nav-tabContent">
     {{ macros.m_tab_content_start('test', true) }}
       {{ macros.setting_input_text_and_buttons('download_test_send_url', 'Video URL 테스트', [['download_test_send_url_btn', '전송']], value=arg['download_test_send_url'], desc=['비디오 재생 URL']) }}
-      {{ macros.setting_input_text_and_buttons('download_test_video_result_json', 'Video URL 테스트', [['download_test_video_result_json_btn', 'JSON 테스트']], value=arg['download_test_video_result_json']) }}
+      {{ macros.setting_input_text_and_buttons('download_test_video_result_json', 'Video URL 테스트', [['select_json_btn', 'JSON 파일 선택'], ['download_test_video_result_json_btn', 'JSON 테스트']], value=arg['download_test_video_result_json']) }}
     {{ macros.m_tab_content_end() }}
 
   </div><!--tab-content-->
@@ -58,6 +58,13 @@ $("body").on('click', '#download_test_video_result_json_btn', function(e){
   });
 });
 
+
+$("body").on('click', '#select_json_btn', function(e){
+  e.preventDefault();
+  m_select_local_file_modal("JSON 파일", '/', false, function(result){
+    $("#download_test_video_result_json").val(result);
+  });
+});
 
 </script>    
 {% endblock %}
