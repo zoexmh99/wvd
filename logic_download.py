@@ -155,7 +155,6 @@ class LogicDownload(LogicModuleBase):
         
     # 여긴 thread로 진입
     def start_video_result(self, data): 
-        logger.debug(self)   
         result = self.start_video_result2(data)    
         return            
         if app.config['config']['use_celery']:
@@ -178,4 +177,4 @@ class LogicDownload(LogicModuleBase):
         for site in self.site_list:
             if site.name == data['site']:
                 entity = site(data)
-                entity.start_process_video_result()
+                entity.download_start()

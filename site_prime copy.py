@@ -17,7 +17,7 @@ logger = P.logger
 package_name = P.package_name
 ModelSetting = P.ModelSetting
 from .utility import Utility
-from .entity_base import EntityBase, EntityDownload
+from .entity_base import EntityBase
 
 #########################################################
 prime_headers = {
@@ -38,18 +38,16 @@ prime_headers = {
 
 
 
-        
 
-
-class EntityWatcha(EntityBase):
-    url_regex = re.compile(r'watcha\.com\/watch\/(?P<code>.*?)$')
-    name = 'watcha'
-
-
+class EntityPrime(EntityBase):
+    url_regex = re.compile(r'www\.primevideo\.com(.*?)detail\/(?P<code>.*?)[\/$]')
+    name = 'prime'
 
     def __init__(self, data):
-        super(EntityWatcha, self).__init__(data)
-
+        super(EntityPrime, self).__init__(data)
+   
+        self.data = None
+        self.code = None
         self.meta = None
         self.show_title = None
         self.season_number = None
@@ -68,15 +66,13 @@ class EntityWatcha(EntityBase):
         self.audio_decryped_filepath = None
 
         self.default_language = None
-        #self.set_data(data)
-        
+        self.set_data(data)
 
 
     def start_process_video_result(self):
         logger.debug(u'프라임 비디오 시작')
-        #self.set_data(data)
         
-        self.analysis()
+        self.make_download_info()
         return
         logger.debug(u'자막 다운로드..')
         self.download_subtitle()
@@ -92,40 +88,43 @@ class EntityWatcha(EntityBase):
         logger.debug(u'완료..')
 
 
-    def analysis(self):
-        for period in self.mpd.periods:
-            logger.debug(period)
-            for adaptation_set in period.adaptation_sets:
-                logger.debug(adaptation_set)
-                logger.debug(adaptation_set.content_type)
-                if adaptation_set.content_type == 'video':
-                    mp4 = EntityDownload('video', adaptation_set=adaptation_set, parent=self)
-                    self.download_list['video'] = mp4
-                elif adaptation_set.content_type == 'audio':
-                    mp4 = EntityDownload('audio', adaptation_set=adaptation_set, parent=self)
-                    self.download_list['audio'] = mp4
-                elif adaptation_set.content_type == 'audio':
-                    mp4 = EntityDownload('text', adaptation_set=adaptation_set, parent=self)
-                    self.download_list['audio'] = mp4
-        logger.debug(self.download_list)
+    def make_download_info(self):
+        self.download_list = {'video':None, 'audio':[], 'text':[]}
+        self.download_list['video'] = self.make_filepath(self.adaptation_set['video'][0]['representation'][-1])
 
 
+        for item in self.data['har']['log']['entries']:
+           if item['request']['method'] == 'GET' and item['request']['url'].find('_audio_') != -1:
+                match = re.compile(r'_audio_(?P<number>\d+)\.mp4').search(item['request']['url'])
+                if not match:
+                    continue
+                audio_url = item['request']['url'].split('?')[0]
+                break
+        
+        logger.debug('bbbbbbbbbbbbbbbbb')
+        logger.debug(audio_url)
+        
+        if audio_url is not None:
+            for audio_adaptation_set in self.adaptation_set['audio']:
+                for representation in audio_adaptation_set['representation']:
+                    #logger.debug(representation['url'] )
+                    if representation['url'] == audio_url:
+                        self.download_list['audio'].append(self.make_filepath(representation))
+                        break
+                if len(self.download_list['audio']) > 0:
+                    break
+        
+        
+        
+        logger.debug(json.dumps(self.download_list, indent=4))
 
+        
+        
     def set_data(self, data):
-        for period in self.mpd.periods:
-            logger.debug(period)
-            for adaptation_set in period.adaptation_sets:
-                logger.debug(adaptation_set)
-                logger.debug(adaptation_set.content_type)
-
-
-
-
+        self.data = data
+        self.code = data['code']
         request_list = self.data['har']['log']['entries']
         for item in request_list:
-
-
-
             if self.meta is None and item['request']['method'] == 'POST' and item['request']['url'].find('GetPlaybackResources') != -1:
                 cookie = ''
                 for tmp in self.data['cookie']:
@@ -134,15 +133,17 @@ class EntityWatcha(EntityBase):
                 self.set_meta(requests.get(item['request']['url'], headers=prime_headers).json())#, data=post_data)
             
             elif self.mp4_info['video']['url'] is None and item['request']['method'] == 'GET' and item['request']['url'].find('_video_') != -1:
+                match = re.compile(r'_video_(?P<video_number>\d+)\.mp4').search(item['request']['url'])
+                if not match:
+                    continue
                 self.mp4_info['video']['url'] = item['request']['url']
-                match = re.compile(r'_video_(?P<video_number>\d+)\.mp4').search(self.mp4_info['video']['url'])
                 self.mp4_info['video']['download_url'] = self.mp4_info['video']['url'].replace(match.group(0), '_video_12.mp4')
                 self.mp4_info['video']['codec'] = 'H.264'
             elif self.mp4_info['audio']['url'] is None and item['request']['method'] == 'GET' and item['request']['url'].find('_audio_') != -1:
                 self.mp4_info['audio']['url'] = item['request']['url']
                 self.mp4_info['audio']['download_url'] = self.mp4_info['audio']['url']
                 self.mp4_info['audio']['codec'] = 'AAC'
-                
+            
         
 
     def set_meta(self, meta):
