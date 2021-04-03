@@ -304,7 +304,8 @@ class LogicServer(LogicModuleBase):
 
             capabilities = options.to_capabilities()
             self.driver = webdriver.Remote("http://localhost:%s" % ModelSetting.get('server_port'), capabilities)
-            self.proxy.new_har(url, options={'captureHeaders': True, 'captureCookies':True, 'captureContent':True})
+            #self.proxy.new_har(url, options={'captureHeaders': True, 'captureCookies':True, 'captureContent':True})
+            self.proxy.new_har(url, options={'captureHeaders': True})
             self.driver.get(url)
         except Exception as exception: 
             logger.error('Exception:%s', exception)
