@@ -113,7 +113,7 @@ class EntityPrime(EntityBase):
                     if len(self.download_list['audio']) > 0:
                         break
             
-            logger.debug(self.download_list)
+            #logger.debug(self.download_list)
 
             for tmp1 in ['subtitleUrls']:
                 for item in self.meta['source'][tmp1]:
@@ -121,7 +121,7 @@ class EntityPrime(EntityBase):
                     #if item['displayName'].find('[CC]') != -1:
                     #    self.default_language = item['languageCode'] 
                     self.download_list['text'].append(self.make_filepath(representation))
-            #logger.debug(json.dumps(self.download_list, indent=4))
+            logger.debug(json.dumps(self.download_list, indent=4))
 
         except Exception as e: 
             P.logger.error('Exception:%s', e)

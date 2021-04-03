@@ -186,7 +186,7 @@ class EntityBase(object):
                     self.merge_option += ['"%s"' % item['filepath_merge'].replace(path_app_root, '.')]
                 else:
                     self.merge_option_etc += ['--language', '"0:%s"' % item['lang']]
-                    self.merge_option += ['"%s"' % item['filepath_merge'].replace(path_app_root, '.')]
+                    self.merge_option_etc += ['"%s"' % item['filepath_merge'].replace(path_app_root, '.')]
 
             self.output_filename = u'{show_title}.S{season_number}E{episode_number}.{quality}p.{audio_codec}{video_codec}.SfKo.mkv'.format(
                 show_title = self.meta['show_title'],
@@ -197,8 +197,9 @@ class EntityBase(object):
                 video_codec = self.download_list['video'][0]['codec_name']
             )
             self.filepath_output = os.path.join(Utility.output_dir, self.output_filename)
-
+            logger.debug(self.merge_option + self.merge_option_etc)
             if os.path.exists(self.filepath_output) == False:
+
                 Utility.mkvmerge(self.merge_option + self.merge_option_etc)
                 shutil.move(self.filepath_mkv, self.filepath_output)
                 logger.debug('파일 생성: %s', self.output_filename)
