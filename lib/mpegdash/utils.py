@@ -1,7 +1,8 @@
 try:
     from past.builtins import unicode   # python3 compat
+    text_type = [unicode, str]
 except:
-    pass
+    text_type = [type(u''), str]
 from xml.dom import minidom
 
 import re
@@ -22,7 +23,8 @@ def parse_child_nodes(xmlnode, tag_name, node_type):
 
     nodes = []
     for elem in elements:
-        if node_type in (unicode, str):
+        #if node_type in (unicode, str):
+        if node_type in text_type:
             node = xmlnode.firstChild.nodeValue
         else:
             node = node_type()

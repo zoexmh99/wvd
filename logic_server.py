@@ -168,7 +168,7 @@ class LogicServer(LogicModuleBase):
     def video_stop_thread_start(self, stop_timestamp):
         def func():
             if self.current_data['url'].find('primevideo') != -1:
-                time.sleep(15)
+                time.sleep(20)
             else:
                 time.sleep(3)
             if stop_timestamp == self.stop_timestamp:

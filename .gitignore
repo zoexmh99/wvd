@@ -3,3 +3,4 @@ __pycache__/
 *.pyc
 chrome_data/
 download/
+tmp/
