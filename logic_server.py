@@ -81,7 +81,7 @@ class LogicServer(LogicModuleBase):
                         ret['msg'] = '실행중이 아닙니다.'
                     else:
                         self.chrome_driver_stop()
-                        ret['msg'] = '중지했습니다.'
+                        ret['msg'] = '중지했습니다.' 
                         ret['data'] = self.chorme_driver_status()
                 elif cmd == 'test':
                     if self.chromedriver_process is None:
@@ -168,7 +168,7 @@ class LogicServer(LogicModuleBase):
     def video_stop_thread_start(self, stop_timestamp):
         def func():
             if self.current_data['url'].find('primevideo') != -1:
-                time.sleep(10)
+                time.sleep(15)
             else:
                 time.sleep(3)
             if stop_timestamp == self.stop_timestamp:
