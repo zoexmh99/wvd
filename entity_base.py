@@ -18,10 +18,6 @@ ModelSetting = P.ModelSetting
 from .utility import Utility
 
 
-class EntityDownload:
-    pass
-
-
 class EntityBase(object):
     
     def __init__(self, data):
@@ -100,10 +96,11 @@ class EntityBase(object):
                     item_representation['bandwidth'] = representation.bandwidth
                     item_representation['codecs'] = representation.codecs
                     item_representation['codec_name'] = representation.codecs
-                    if item_representation['codecs'].startswith('avc1'):
-                        item_representation['codec_name'] = 'H.264'
-                    elif item_representation['codecs'].startswith('mp4a.40.2'):
-                        item_representation['codec_name'] = 'AAC'
+                    if item_representation['codecs'] is not None:
+                        if item_representation['codecs'].startswith('avc1'):
+                            item_representation['codec_name'] = 'H.264'
+                        elif item_representation['codecs'].startswith('mp4a.40.2'):
+                            item_representation['codec_name'] = 'AAC'
                     
 
                     item_representation['height'] = representation.height
@@ -179,6 +176,9 @@ class EntityBase(object):
                 if os.path.exists(item['filepath_download']) and os.path.exists(item['filepath_merge']) == False:
                     if item['mimeType'] == 'text/ttml':
                         Utility.ttml2srt(item['filepath_download'], item['filepath_merge'])
+                    elif item['mimeType'] == 'text/vtt':
+                        Utility.vtt2srt(item['filepath_download'], item['filepath_merge'])
+
                 if item['lang'] == 'ko':
                     self.merge_option += ['--language', '"0:%s"' % item['lang']]
                     self.merge_option += ['--default-track', '"0:yes"']
@@ -188,14 +188,22 @@ class EntityBase(object):
                     self.merge_option_etc += ['--language', '"0:%s"' % item['lang']]
                     self.merge_option_etc += ['"%s"' % item['filepath_merge'].replace(path_app_root, '.')]
 
-            self.output_filename = u'{show_title}.S{season_number}E{episode_number}.{quality}p.{audio_codec}{video_codec}.SfKo.mkv'.format(
-                show_title = self.meta['show_title'],
-                season_number = str(self.meta['season_number']).zfill(2),
-                episode_number = str(self.meta['episode_number']).zfill(2),
-                quality = self.download_list['video'][0]['height'],
-                audio_codec = self.audio_codec,
-                video_codec = self.download_list['video'][0]['codec_name']
-            )
+            if self.meta['content_type'] == 'show':
+                self.output_filename = u'{title}.S{season_number}E{episode_number}.{quality}p.{audio_codec}{video_codec}.SfKo.mkv'.format(
+                    title = self.meta['title'],
+                    season_number = str(self.meta['season_number']).zfill(2),
+                    episode_number = str(self.meta['episode_number']).zfill(2),
+                    quality = self.download_list['video'][0]['height'],
+                    audio_codec = self.audio_codec,
+                    video_codec = self.download_list['video'][0]['codec_name']
+                )
+            else:
+                self.output_filename = u'{title}.{quality}p.{audio_codec}{video_codec}.SfKo.mkv'.format(
+                    title = self.meta['title'],
+                    quality = self.download_list['video'][0]['height'],
+                    audio_codec = self.audio_codec,
+                    video_codec = self.download_list['video'][0]['codec_name']
+                )
             self.filepath_output = os.path.join(Utility.output_dir, self.output_filename)
             logger.debug(self.merge_option + self.merge_option_etc)
             if os.path.exists(self.filepath_output) == False:
@@ -217,3 +225,20 @@ class EntityBase(object):
             if filename.startswith(self.code):
                 #os.remove(os.path.join(self.temp_dir, filename))
                 pass
+
+
+    def get_response(self, item):
+        try:
+            headers = {}
+            for h in item['request']['headers']:
+                headers[h['name']] = h['value']
+            if item['request']['method'] == 'GET':
+                return requests.get(item['request']['url'], headers=headers)
+            elif item['request']['method'] == 'POST':
+                return requests.post(item['request']['url'], headers=headers)
+
+        
+        
+        except Exception as e: 
+            P.logger.error('Exception:%s', e)
+            P.logger.error(traceback.format_exc())

@@ -155,8 +155,8 @@ class LogicDownload(LogicModuleBase):
         
     # 여긴 thread로 진입
     def start_video_result(self, data): 
-        result = self.start_video_result2(data)    
-        return            
+        #result = self.start_video_result2(data)    
+        #return            
         if app.config['config']['use_celery']:
             result = self.start_video_result1.apply_async((self, data))
             logger.debug("Celery 대기")

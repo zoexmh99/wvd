@@ -176,3 +176,16 @@ class Utility(object):
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc()) 
+
+
+    @classmethod
+    def vtt2srt(cls, source, target):
+        try:
+            if os.path.exists(target):
+                return
+            command = [FFMPEG, '-i', '"%s"' % source,  '"%s"' % target]
+            os.system(' '.join(command))
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc()) 
+    

@@ -64,16 +64,18 @@ class EntityPrime(EntityBase):
                     Utility.write_json(self.meta['source'], os.path.join(self.temp_dir, '{code}.meta.json'.format(code=self.code)))
                     break
             
-            self.meta['content_type'] = self.meta['source']['catalogMetadata']['catalog']['entityType']
+            self.meta['content_type'] = 'show' if self.meta['source']['catalogMetadata']['catalog']['entityType'] == 'TV Show' else 'movie'
             
             logger.debug(u"타입 : " + self.meta['content_type'])
             
-            if self.meta['content_type'] == 'TV Show':
+            if self.meta['content_type'] == 'show':
                 self.meta['episode_number'] = self.meta['source']['catalogMetadata']['catalog']['episodeNumber']
                 self.meta['episode_title'] = self.meta['source']['catalogMetadata']['catalog']['title']
                 self.meta['season_number'] = self.meta['source']['catalogMetadata']['family']['tvAncestors'][0]['catalog']['seasonNumber']
-                self.meta['show_title'] = self.meta['source']['catalogMetadata']['family']['tvAncestors'][1]['catalog']['title']
+                self.meta['title'] = self.meta['source']['catalogMetadata']['family']['tvAncestors'][1]['catalog']['title']
                 logger.debug(u'제목: [%s] 시즌:[%s], 에피:[%s] [%s]', self.meta['show_title'], self.meta['season_number'], self.meta['episode_number'], self.meta['episode_title'])
+            else:
+                self.meta['title'] = self.meta['source']['catalogMetadata']['catalog']['title']
 
             for item in self.data['har']['log']['entries']:
                 if item['request']['method'] == 'GET' and item['request']['url'].find('_audio_') != -1:

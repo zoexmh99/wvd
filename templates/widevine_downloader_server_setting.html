@@ -85,9 +85,9 @@ function command(cmd, data=null) {
     success: function (ret) {
       console.log(ret);
       notify(ret['msg'], ret['ret']);  
-      if (cmd == 'run' || cmd == 'stop') {
-        $('#server_chromedriver_status').html(ret['data']);
-      }
+      //if (cmd == 'run' || cmd == 'stop') //$('#server_chromedriver_status').html(ret['data']);
+      if (cmd == 'run') $('#server_chromedriver_status').html('실행요청. 새로고침 하세요.');
+      else if (cmd == 'stop') $('#server_chromedriver_status').html('중지요청. 새로고침 하세요.');
     }
   });
 }
