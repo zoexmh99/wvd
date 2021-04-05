@@ -24,10 +24,11 @@ from .entity_base import EntityBase
 class EntityWatcha(EntityBase):
     url_regex = re.compile(r'watcha\.com\/watch\/(?P<code>.*?)$')
     name = 'watcha'
+    name_on_filename = 'WC'
 
 
-    def __init__(self, data):
-        super(EntityWatcha, self).__init__(data)
+    def __init__(self, db_id, json_filepath):
+        super(EntityWatcha, self).__init__(db_id, json_filepath)
 
     def prepare(self):
         try:
@@ -36,11 +37,23 @@ class EntityWatcha(EntityBase):
                     res = self.get_response(item)
                     self.meta['source'] = res.json()
                     Utility.write_json(self.meta['source'], os.path.join(self.temp_dir, '{code}.meta.json'.format(code=self.code)))
+                if item['request']['method'] == 'GET' and item['request']['url'].find('tv_episodes.json?all=true') != -1:
+                    res = self.get_response(item)
+                    logger.debug('111111111111111111111111111111')
+                    tmp = res.json()
+                    for code in tmp['tv_episode_codes']:
+                        P.logic.get_module('download').queue_chrome_request.add_request_url('https://watcha.com/watch/%s' % code, '')
+
+                   
+                    logger.debug(json.dumps(tmp, indent=4))
+                    
+                    #self.meta['source'] = res.json()
+                    #Utility.write_json(self.meta['source'], os.path.join(self.temp_dir, '{code}.meta.json'.format(code=self.code)))
                     break
+                
             
             self.meta['content_type'] = 'show' if self.meta['source']['content_type'] == 'tv_episodes' else 'movie'
-            
-            logger.debug(u"타입 : " + self.meta['content_type'])
+            self.add_log(u"타입 : %s" % self.meta['content_type'])
             
             if self.meta['content_type'] == 'show':
                 logger.debug(self.meta['source']['title'])

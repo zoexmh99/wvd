@@ -32,16 +32,7 @@ $(document).ready(function(){
 
 $("body").on('click', '#download_test_send_url_btn', function(e){
   e.preventDefault();
-  $.ajax({
-    url: '/' + package_name + '/ajax/' + sub + '/send_url',
-    type: "POST", 
-    cache: false,
-    data: {url:$("#download_test_send_url").val()},
-    dataType: "json",
-    success: function (ret) {
-      notify(ret['msg'], ret['ret']);  
-    }
-  });
+  global_send_commmand('test_send_url', {url:$("#download_test_send_url").val()});
 });
 
 $("body").on('click', '#download_test_video_result_json_btn', function(e){

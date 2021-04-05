@@ -42,9 +42,10 @@ prime_headers = {
 class EntityPrime(EntityBase):
     url_regex = re.compile(r'www\.primevideo\.com(.*?)detail\/(?P<code>.*?)[\/$]')
     name = 'prime'
+    name_on_filename = 'AMZN'
 
-    def __init__(self, data):
-        super(EntityPrime, self).__init__(data)
+    def __init__(self, db_id, json_filepath):
+        super(EntityPrime, self).__init__(db_id, json_filepath)
 
 
     def prepare(self):
@@ -73,7 +74,7 @@ class EntityPrime(EntityBase):
                 self.meta['episode_title'] = self.meta['source']['catalogMetadata']['catalog']['title']
                 self.meta['season_number'] = self.meta['source']['catalogMetadata']['family']['tvAncestors'][0]['catalog']['seasonNumber']
                 self.meta['title'] = self.meta['source']['catalogMetadata']['family']['tvAncestors'][1]['catalog']['title']
-                logger.debug(u'제목: [%s] 시즌:[%s], 에피:[%s] [%s]', self.meta['show_title'], self.meta['season_number'], self.meta['episode_number'], self.meta['episode_title'])
+                logger.debug(u'제목: [%s] 시즌:[%s], 에피:[%s] [%s]', self.meta['title'], self.meta['season_number'], self.meta['episode_number'], self.meta['episode_title'])
             else:
                 self.meta['title'] = self.meta['source']['catalogMetadata']['catalog']['title']
 
@@ -86,7 +87,8 @@ class EntityPrime(EntityBase):
                     self.audio_url = item['request']['url'].split('?')[0]
                     self.mpd_url = self.audio_url.replace('_audio_%s.mp4' % match.group('number'), '_corrected.mpd?encoding=segmentBase')
                     break
-                
+            logger.debug('AAAAAAAAAAAAAAAAAAAAAAAA')
+            logger.debug(self.audio_url)
 
 
         except Exception as e: 

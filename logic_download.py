@@ -27,23 +27,30 @@ from .utility import Utility
 #from lib_metadata.server_util import MetadataServerUtil
 #########################################################
 
-from .site_prime import EntityPrime
-from .site_watcha import EntityWatcha
+
+from .queue_chrome_request import QueueChromeRequest
+from .queue_download import QueueDownload
+from .model import ModelWVDItem
 
 class LogicDownload(LogicModuleBase):
     db_default = {
         'download_db_version' : '1',
+        'download_interval' : '30',
+        'download_auto_start' : 'False',
         'download_test_send_url' : '',
         'download_test_video_result_json' : '',
         'download_queue_list' : '',
+        'downloadl_last_list_option' : '',
     }
 
-    site_list = [EntityPrime, EntityWatcha]
+    
     
 
     def __init__(self, P):
         super(LogicDownload, self).__init__(P, 'queue')
         self.name = 'download'
+        self.queue_chrome_request = QueueChromeRequest(self)
+        self.queue_download = QueueDownload(self)
 
     def process_menu(self, sub, req):
         arg = P.ModelSetting.to_dict()
@@ -60,10 +67,12 @@ class LogicDownload(LogicModuleBase):
     def process_ajax(self, sub, req):
         try:
             ret = {'ret':'success'}
-            if sub == 'send_url':
-                url = req.form['url']
-                ModelSetting.set('download_test_send_url', url)
-                ret = self.send_url(url, is_test=True)
+            if sub == 'web_list':
+                return jsonify(ModelWVDItem.web_list(request))
+            elif sub == 'db_remove':
+                return jsonify(ModelWVDItem.delete_by_id(req.form['id']))
+            
+                
             elif sub == 'video_result_test':
                 filepath = req.form['json_filepath']
                 logger.debug('filepath : %s', filepath)
@@ -76,9 +85,22 @@ class LogicDownload(LogicModuleBase):
                 thread.start()
                 ret['msg'] = u'시작했습니다.'
             elif sub == 'queue_start':
-                self.queue_start()
+                pass
+                #self.queue_chrome_request.start_enqueue_thread()
+                #self.queue_start()
             elif sub =='queue_stop':
                 self.queue_stop()
+            # 목록
+            elif sub == 'request_url_add':
+                ret = self.queue_chrome_request.add_request_url(req.form['url'], req.form['memo'])
+            elif sub == 'command':
+                command = req.form['command']
+                if command == 'test_send_url':
+                    url = req.form['url']
+                    ModelSetting.set('download_test_send_url', url)
+                    ret = self.queue_chrome_request.send_url(url)
+                elif command == 'download_start':
+                    self.download_start()
             return jsonify(ret)
         except Exception as e: 
             P.logger.error('Exception:%s', e)
@@ -87,16 +109,16 @@ class LogicDownload(LogicModuleBase):
 
 
     def process_normal(self, sub, req):
-        ret = {'ret':'success'}
-        if sub == 'video_result':
-            data = req.json
-            def func():
-                self.process_video_result(data)
-            thread = threading.Thread(target=func, args=())
-            #thread.daemon = True
-            thread.start()
-        return jsonify(ret)
-
+        try:
+            ret = {'ret':'success'}
+            if sub == 'video_result':
+                data = req.json
+                self.queue_download.receive_data(data)
+            return jsonify(ret)
+        except Exception as e: 
+            P.logger.error('Exception:%s', e)
+            P.logger.error(traceback.format_exc())
+            return jsonify({'ret':'exception', 'log':str(e)})
 
     def plugin_load(self):
         if os.path.exists(Utility.tmp_dir) == False:
@@ -105,6 +127,13 @@ class LogicDownload(LogicModuleBase):
             os.makedirs(Utility.json_dir)
         if os.path.exists(Utility.output_dir) == False:
             os.makedirs(Utility.output_dir)
+
+
+    def scheduler_function(self):
+        self.queue_chrome_request.enqueue()
+        self.queue_download.enqueue()
+
+
 
     #########################################################
 
@@ -130,51 +159,8 @@ class LogicDownload(LogicModuleBase):
             return {'ret':'warning', 'msg': str(e)}
 
     
-    def process_video_result(self, data):
-        # video
-        filename = '%s.json' % Util.change_text_for_use_filename(data['url'])[:100]
-        logger.debug('1111111111111111')
-        logger.debug(filename)
-        for site in self.site_list:
-            logger.debug([data['url']])
-            logger.debug(site.url_regex)
-            match = site.url_regex.search(data['url'])
-            logger.debug(site.url_regex)
-
-            if match:
-                logger.debug('22222222222222222222222222222222222')
-                filename = '%s_%s.json' % (site.name, match.group('code'))
-                data['site'] = site.name
-                data['code'] = match.group('code')
-
-        json_filepath = os.path.join(Utility.json_dir, filename)
-        Utility.write_json(data, json_filepath)
-        self.start_video_result(data)
+   
 
 
         
-    # 여긴 thread로 진입
-    def start_video_result(self, data): 
-        #result = self.start_video_result2(data)    
-        #return            
-        if app.config['config']['use_celery']:
-            result = self.start_video_result1.apply_async((self, data))
-            logger.debug("Celery 대기")
-            result.get() 
-            logger.debug("Celery 대기 종료")
-            
-        else:
-            result = self.start_video_result2(data)
-
-    @celery.task
-    def start_video_result1(self, data):
-        self.start_video_result2(data)
-
-    def start_video_result2(self, data):
-        logger.debug(u"비디오 결과 분석 시작")
-        logger.debug('URL : %s', data['url'])
-
-        for site in self.site_list:
-            if site.name == data['site']:
-                entity = site(data)
-                entity.download_start()
+    

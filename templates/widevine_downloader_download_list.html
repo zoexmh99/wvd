@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+{% block content %}
+ 
+<div>
+  {{ macros.m_button_group([['request_url_add_btn', 'URL 추가'], ['global_one_execute_sub_btn', '1회 실행']]) }}
+  {{ macros.m_row_start('5') }}
+  {{ macros.m_row_end() }}
+  <div class="container-fluid row show-grid">
+    {{ macros.label('URL', width='1') }}
+    <span class="col-md-11">
+      <input id="request_url" name="request_url" class="form-control form-control-sm w-100" type="text" placeholder="동영상 재생 URL" >
+    </span>
+    {{ macros.label('메모', width='1') }}
+    <span class="col-md-11">
+      <input id="request_memo" name="request_memo" class="form-control form-control-sm w-100" type="text">
+    </span>
+  </div>
+  {{ macros.m_row_start('5') }}
+  {{ macros.m_row_end() }}
+  {{ macros.m_hr() }}
+  {{ macros.m_row_start('5') }}
+  {{ macros.m_row_end() }}
+
+  <form id="form_search" class="form-inline" style="text-align:left">
+    <div class="container-fluid">
+      <div class="row show-grid">
+        <span class="col-md-2">
+          <select id="order" name="order" class="form-control form-control-sm">
+            <option value="desc">최근순</option>
+            <option value="asc">오래된순</option>
+          </select>
+        </span>
+        <span class="col-md-2">
+          <select id="option1" name="option1" class="form-control form-control-sm">
+            <option value="all">전체</option>
+            <option value="ready">준비</option>
+            <option value="receive_data">데이터수신</option>
+            <option value="completed">완료</option>
+          </select>
+        </span>
+        <span class="col-md-2">
+          <select id="option2" name="option2" class="form-control form-control-sm">
+            <option value="all">전체</option>
+            <option value="netflix">넷플릭스</option>
+            <option value="prime">프라임비디오</option>
+            <option value="watcha">왓챠</option>
+            <option value="wavve">웨이브</option>
+            <option value="tving">티빙</option>
+          </select>
+        </span>
+        <span class="col-md-6">
+          <input id="search_word" name="search_word" class="form-control form-control-sm w-75" type="text" placeholder="" aria-label="Search">
+          <button id="search" class="btn btn-sm btn-outline-success">검색</button>
+          <button id="global_reset_btn" class="btn btn-sm btn-outline-success">리셋</button>
+        </span>
+      </div>
+    </div>
+  </form>
+  <div id='page1'></div>
+  {{ macros.m_hr_head_top() }}
+  {{ macros.m_row_start('0') }}
+  {{ macros.m_col(2,  macros.m_strong('Poster')) }}
+  {{ macros.m_col(10,  macros.m_strong('Info')) }}
+  {{ macros.m_row_end() }}
+  {{ macros.m_hr_head_bottom() }}
+  <div id="list_div"></div>
+  <div id='page2'></div>
+</div>
+
+<script type="text/javascript">
+var package_name = "{{arg['package_name']}}";
+var sub = "{{arg['sub']}}";
+var current_data = null;
+var downloadl_last_list_option = "{{arg['downloadl_last_list_option']}}";
+
+$(document).ready(function(){
+  refresh_search();
+});
+
+function refresh_search() {
+  tmp = downloadl_last_list_option.split('|');
+  if (tmp.length == 5) {
+    document.getElementById("option1").value = tmp[0];
+    document.getElementById("option2").value = tmp[1];
+    document.getElementById("order").value = tmp[2];
+    document.getElementById("search_word").value = tmp[3];
+    global_sub_request_search(tmp[4]);
+  } else {
+    global_sub_request_search('1');
+  }
+}
+
+$("#search").click(function(e) {
+  e.preventDefault();
+  global_sub_request_search('1');
+});
+
+$("body").on('click', '#page', function(e){
+  e.preventDefault();
+  global_sub_request_search($(this).data('page'));
+});
+
+$("body").on('click', '#reset_btn', function(e){
+  e.preventDefault();
+  document.getElementById("order").value = 'desc';
+  document.getElementById("option1").value = 'all';
+  document.getElementById("option2").value = 'all';
+  document.getElementById("search_word").value = '';
+  global_sub_request_search('1')
+});
+
+$("body").on('change', '#option1', function(e){
+  global_sub_request_search('1');
+});
+$("body").on('change', '#option2', function(e){
+  global_sub_request_search('1');
+});
+$("body").on('change', '#order', function(e){
+  global_sub_request_search('1');
+});
+
+
+function make_list(data) {
+  str = '';
+  for (i in data) {
+    console.log(data[i])
+    str += m_row_start();
+    str += m_col(1, data[i].id);
+    //tmp = (data[i].status == 'completed') ? '완료' : '미완료';
+    tmp = data[i].status;
+    tmp += '<br>' + data[i].site;
+    tmp += '<br>' + data[i].code;
+    str += m_col(2, tmp);
+    
+    /*
+    tmp = '<br>target_name : ' + data[i].client_target_name;
+    tmp += '<br>copy_type : ' + data[i].client_copy_type;
+    tmp += '<br>call_from : ' + data[i].client_call_from;
+    str += m_col(2, tmp);
+
+    tmp += '<br>board_type : ' + data[i].client_board_type;
+    tmp += '<br>category_type : ' + data[i].client_category_type;
+    
+    tmp += '<br>size : ' + data[i].client_size;
+    tmp += '<br>count : ' + data[i].client_count;
+    str += m_col(5, tmp);
+
+    tmp = 'client_ddns : ' + data[i].client_ddns;
+    tmp += '<br>client_sjva_me_id : ' + data[i].client_sjva_me_id;
+    tmp += '<br>' + data[i].created_time + '(추가)';
+    if (data[i].request_time != null) tmp += '<br>' + data[i].request_time + '(서버 복사 요청)';
+    if (data[i].clone_completed_time != null) tmp += '<br>' + data[i].clone_completed_time + '(서버 복사 완료)';
+    if (data[i].completed_time != null) tmp += '<br>' + data[i].completed_time + '(내 리모트 이동 완료)';
+    */
+    tmp = '' + data[i].created_time;
+    tmp += '<br>' + data[i].download_start_time;
+    tmp += '<br>' + data[i].completed_time;
+    
+    str += m_col(2, tmp);
+
+    tmp = 'URL: <a href="' + data[i].url + '" target="_blank">' + data[i].url + '</a>';
+    
+    tmp2 = m_button('global_json_btn', 'JSON', [{'key':'id', 'value':data[i].id}]);
+    tmp2 += m_button('global_remove_btn', '삭제', [{'key':'id', 'value':data[i].id}]);
+    tmp += '<br>' + m_button_group(tmp2)
+    str += m_col(7, tmp)
+    str += m_row_end();
+
+    str += m_row_start();
+    tmp = '<pre>' + data[i].log + '</pre>';
+    str += m_col(12, tmp)
+    str += m_row_end();
+
+    if (i != data.length -1) str += m_hr();
+  }
+  document.getElementById("list_div").innerHTML = str;
+}
+
+
+
+///////////////////////////////////////////////////////////
+
+$("body").on('click', '#request_url_add_btn', function(e){
+  e.preventDefault();
+  var url = $("#request_url").val().trim();
+  if (url == '') {
+    notify('URL을 입력하세요.', 'warning');
+    return;
+  }
+  $.ajax({
+    url: '/' + package_name + '/ajax/' + sub + '/request_url_add',
+    type: "POST", 
+    cache: false,
+    data:{url:url, memo:$("#request_memo").val().trim()},
+    dataType: "json",
+    success: function (data) {
+      notify(data['msg'], data['ret']);
+      refresh_search();
+    }
+  });
+});
+
+
+$("body").on('click', '#download_start_btn', function(e){
+  global_send_command({command:'download_start'});
+});
+
+
+
+</script>    
+{% endblock %}
