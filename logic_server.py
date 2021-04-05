@@ -8,6 +8,16 @@ import requests
 # third-party
 from flask import request, render_template, jsonify, redirect
 from selenium import webdriver
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support.events import EventFiringWebDriver, AbstractEventListener
+from selenium.webdriver import ActionChains
+from selenium.common.exceptions import *
+from selenium.webdriver.common.alert import Alert
+from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.support.select import Select
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
 
 # sjva 공용
 from framework import db, scheduler, path_data, socketio, SystemModelSetting, app, celery
@@ -184,7 +194,7 @@ class LogicServer(LogicModuleBase):
         if self.driver is not None:
             try: self.driver.close()
             except: pass
-            time.sleep(1)
+            time.sleep(3)
             try: self.driver.quit()
             except: pass
             self.driver = None
@@ -208,6 +218,22 @@ class LogicServer(LogicModuleBase):
                 return
         """
         self.current_data['cookie'] = self.driver.get_cookies()
+
+        if self.driver.current_url.find('watcha') != -1:
+            close_btn = WebDriverWait(self.driver, 10).until(lambda driver: self.driver.find_element_by_xpath('//*[@id="sizing-wrapper"]/div/div[2]/div[2]/span/button'))
+            logger.debug(close_btn)
+            try:
+                # 계속 진행할까요? 확인 클릭
+                confirm_btn = WebDriverWait(self.driver, 1).until(lambda driver: self.driver.find_element_by_xpath('/html/body/div[1]/div[2]/div/div/div/button'))
+                logger.debug(confirm_btn)
+                confirm_btn.click()
+                time.sleep(2)
+            except Exception as e: 
+                P.logger.error('Exception:%s', e)
+                P.logger.error(traceback.format_exc())
+            close_btn.click()
+            time.sleep(3)
+
         logger.debug('Driver Stop...')
         self.driver_stop()
         logger.debug(json.dumps(self.current_data['key'], indent=4))
