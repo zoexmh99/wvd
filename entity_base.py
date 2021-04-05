@@ -16,11 +16,17 @@ logger = P.logger
 package_name = P.package_name
 ModelSetting = P.ModelSetting
 from .utility import Utility
-
+from .model import ModelWVDItem
 
 class EntityBase(object):
     
-    def __init__(self, data):
+    def __init__(self, db_id, json_filepath):
+        self.db_id = db_id
+        if json_filepath is None:
+            self.db_item = ModelWVDItem.get_by_id(db_id)
+            data = Utility.read_json(self.db_item.response_filepath)
+        else:
+            self.db_item = ModelWVDItem()
         self.temp_dir = os.path.join(Utility.tmp_dir, self.name)
         if os.path.exists(self.temp_dir) == False:
             os.makedirs(self.temp_dir)
@@ -33,22 +39,36 @@ class EntityBase(object):
 
         #self.default_process()
     
+    def set_status(self, status):
+        self.db_item.status = status
+        #if self.db_id != -1:
+        #    self.db_item.save()
+
+    def add_log(self, log):
+        logger.debug(log)
+        if self.db_item.log is None:
+            self.db_item.log = ''
+        self.db_item.log += u'%s\n' % (log)
     
     def download_start(self):
         try:
             logger.debug(u'공통 처리')
+            self.db_item.download_start_time = datetime.now()
+            self.set_status('downloading')
+
             self.prepare()
             self.find_mpd()
             if self.mpd is not None:
                 self.analysis_mpd()
-            
             self.make_download_info()
             self.download()
-            
             self.clean()
+            self.set_status('completed')
         finally:
             logger.debug("다운로드 종료")
-
+            if self.db_id != -1:
+                self.db_item.save()
+        
 
 
     def find_key(self, kid):
@@ -57,24 +77,21 @@ class EntityBase(object):
                 return key['key']
 
     def find_mpd(self):
-        logger.debug('Find mpd..')
         if self.mpd_url is None:
             request_list = self.data['har']['log']['entries']
             for item in request_list:
                 if item['request']['method'] == 'GET' and item['request']['url'].find('.mpd') != -1:
                     self.mpd_url = item['request']['url']
+                    self.add_log('MPD URL : %s' % self.mpd_url)
                     break
-        
-
-            
-        logger.debug(self.mpd_url)
         from mpegdash.parser import MPEGDASHParser
         self.mpd = MPEGDASHParser.parse(self.mpd_url)
         self.mpd_base_url = self.mpd_url[:self.mpd_url.rfind('/')+1]
-        logger.debug(self.mpd_base_url)
-        MPEGDASHParser.write(self.mpd, os.path.join(self.temp_dir, '{}.mpd'.format(self.code)))
-        logger.debug(u'MPD 저장 ')
-                
+        self.add_log('MPD Base URL : %s' % self.mpd_base_url)
+        tmp = os.path.join(self.temp_dir, '{}.mpd'.format(self.code))
+        MPEGDASHParser.write(self.mpd, tmp)
+        self.add_log('MPD 저장 : %s' % tmp)
+               
 
 
 
@@ -189,20 +206,22 @@ class EntityBase(object):
                     self.merge_option_etc += ['"%s"' % item['filepath_merge'].replace(path_app_root, '.')]
 
             if self.meta['content_type'] == 'show':
-                self.output_filename = u'{title}.S{season_number}E{episode_number}.{quality}p.{audio_codec}{video_codec}.SfKo.mkv'.format(
+                self.output_filename = u'{title}.S{season_number}E{episode_number}.{quality}p.{site}.WEB-DL.{audio_codec}{video_codec}.SfKo.mkv'.format(
                     title = self.meta['title'],
                     season_number = str(self.meta['season_number']).zfill(2),
                     episode_number = str(self.meta['episode_number']).zfill(2),
                     quality = self.download_list['video'][0]['height'],
                     audio_codec = self.audio_codec,
-                    video_codec = self.download_list['video'][0]['codec_name']
+                    video_codec = self.download_list['video'][0]['codec_name'],
+                    site = self.name_on_filename,
                 )
             else:
-                self.output_filename = u'{title}.{quality}p.{audio_codec}{video_codec}.SfKo.mkv'.format(
+                self.output_filename = u'{title}.{quality}p.{site}.WEB-DL.{audio_codec}{video_codec}.SfKo.mkv'.format(
                     title = self.meta['title'],
                     quality = self.download_list['video'][0]['height'],
                     audio_codec = self.audio_codec,
-                    video_codec = self.download_list['video'][0]['codec_name']
+                    video_codec = self.download_list['video'][0]['codec_name'],
+                    site = self.name_on_filenmae,
                 )
             self.filepath_output = os.path.join(Utility.output_dir, self.output_filename)
             logger.debug(self.merge_option + self.merge_option_etc)

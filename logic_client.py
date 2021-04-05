@@ -104,15 +104,7 @@ class LogicClient(LogicModuleBase):
     #########################################################
 
 
-    def send_url(self, url, is_test=False):
-        try:
-            server_url = '{server_ddns}/widevine_downloader/api/server/start'.format(server_ddns=ModelSetting.get('base_server_ddns'))
-            data={'apikey':ModelSetting.get('base_server_apikey'), 'url':url, 'client_ddns':SystemModelSetting.get('ddns'), 'client_apikey':SystemModelSetting.get('auth_apikey')}
-            return requests.post(server_url, data=data).json()
-        except Exception as e: 
-            P.logger.error('Exception:%s', e)
-            P.logger.error(traceback.format_exc())
-            return {'ret':'warning', 'msg': str(e)}
+
 
 
     url_regex = {'prime' : re.compile(r'www\.primevideo\.com(.*?)detail\/(?P<code>.*?)\/') }

@@ -37,7 +37,7 @@ class P(object):
                 ['setting', u'클라이언트 설정'], 
             ],
             'download' : [
-                ['queue', u'큐'], ['test', u'테스트'], 
+                ['list', u'목록'], ['setting', u'설정'], ['queue', u'큐'], ['test', u'테스트'], 
             ],
         }
     }  
@@ -57,6 +57,9 @@ class P(object):
     logic = None
     module_list = None
     home_module = 'client'
+
+    
+
 
 
 def initialize():
