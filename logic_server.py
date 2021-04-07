@@ -42,7 +42,7 @@ class LogicServer(LogicModuleBase):
         'server_port' : '19515',
         'server_remote_allow' : 'True',
         'server_test_url' : '',
-        'server_test_netflix_video' : '0',
+        'server_test_netflix_video' : '0' ,
     }
 
     chromedriver_process = None
