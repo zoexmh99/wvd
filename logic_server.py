@@ -220,19 +220,23 @@ class LogicServer(LogicModuleBase):
         self.current_data['cookie'] = self.driver.get_cookies()
 
         if self.driver.current_url.find('watcha') != -1:
-            close_btn = WebDriverWait(self.driver, 10).until(lambda driver: self.driver.find_element_by_xpath('//*[@id="sizing-wrapper"]/div/div[2]/div[2]/span/button'))
-            logger.debug(close_btn)
             try:
-                # 계속 진행할까요? 확인 클릭
-                confirm_btn = WebDriverWait(self.driver, 1).until(lambda driver: self.driver.find_element_by_xpath('/html/body/div[1]/div[2]/div/div/div/button'))
-                logger.debug(confirm_btn)
-                confirm_btn.click()
-                time.sleep(2)
-            except Exception as e: 
+                close_btn = WebDriverWait(self.driver, 10).until(lambda driver: self.driver.find_element_by_xpath('//*[@id="sizing-wrapper"]/div/div[2]/div[2]/span/button'))
+                logger.debug(close_btn)
+                try:
+                    # 계속 진행할까요? 확인 클릭
+                    confirm_btn = WebDriverWait(self.driver, 1).until(lambda driver: self.driver.find_element_by_xpath('/html/body/div[1]/div[2]/div/div/div/button'))
+                    logger.debug(confirm_btn)
+                    confirm_btn.click()
+                    time.sleep(2)
+                except Exception as e: 
+                    P.logger.error('Exception:%s', e)
+                    P.logger.error(traceback.format_exc())
+                close_btn.click()
+                time.sleep(3)
+            except:
                 P.logger.error('Exception:%s', e)
                 P.logger.error(traceback.format_exc())
-            close_btn.click()
-            time.sleep(3)
 
         logger.debug('Driver Stop...')
         self.driver_stop()
