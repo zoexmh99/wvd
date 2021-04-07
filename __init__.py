@@ -1,12 +1,18 @@
 # -*- coding: utf-8 -*-
 #from .plugin import blueprint, menu, plugin_load, plugin_unload, plugin_info
+import os
+    from framework import app
 try:
     from selenium import webdriver
 except:
-    import os
-    from framework import app
     os.system("{} install selenium".format(app.config['config']['pip']))
-    
+
+try:
+    import lxml.html
+except:
+    os.system("{} install lxml".format(app.config['config']['pip']))
+
+
 from .plugin import P
 blueprint = P.blueprint
 menu = P.menu
