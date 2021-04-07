@@ -71,26 +71,7 @@ class LogicDownload(LogicModuleBase):
                 return jsonify(ModelWVDItem.web_list(request))
             elif sub == 'db_remove':
                 return jsonify(ModelWVDItem.delete_by_id(req.form['id']))
-            
-                
-            elif sub == 'video_result_test':
-                filepath = req.form['json_filepath']
-                logger.debug('filepath : %s', filepath)
-                ModelSetting.set('download_test_video_result_json', filepath)
-                data = Utility.read_json(filepath)
-                def func():
-                    self.start_video_result(data)
-                thread = threading.Thread(target=func, args=())
-                #thread.daemon = True
-                thread.start()
-                ret['msg'] = u'시작했습니다.'
-            elif sub == 'queue_start':
-                pass
-                #self.queue_chrome_request.start_enqueue_thread()
-                #self.queue_start()
-            elif sub =='queue_stop':
-                self.queue_stop()
-            # 목록
+
             elif sub == 'request_url_add':
                 ret = self.queue_chrome_request.add_request_url(req.form['url'], req.form['memo'])
             elif sub == 'command':
@@ -99,8 +80,18 @@ class LogicDownload(LogicModuleBase):
                     url = req.form['url']
                     ModelSetting.set('download_test_send_url', url)
                     ret = self.queue_chrome_request.send_url(url)
+                elif command == 'test_video_result_json':
+                    json_filepath = req.form['json_filepath']
+                    ModelSetting.set('download_test_video_result_json', json_filepath)
+                    self.queue_download.start_video_result(-1, json_filepath)
                 elif command == 'download_start':
                     self.download_start()
+                elif command == 'set_status':
+                    logger.debug(req.form['status'])
+                    logger.debug(req.form['db_id'])
+                    db_item = ModelWVDItem.get_by_id(int(req.form['db_id']))
+                    db_item.status = req.form['status']
+                    db_item.save()
             return jsonify(ret)
         except Exception as e: 
             P.logger.error('Exception:%s', e)

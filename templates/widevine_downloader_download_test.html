@@ -32,21 +32,12 @@ $(document).ready(function(){
 
 $("body").on('click', '#download_test_send_url_btn', function(e){
   e.preventDefault();
-  global_send_commmand('test_send_url', {url:$("#download_test_send_url").val()});
+  global_send_command('test_send_url', {url:$("#download_test_send_url").val()});
 });
 
 $("body").on('click', '#download_test_video_result_json_btn', function(e){
   e.preventDefault();
-  $.ajax({
-    url: '/' + package_name + '/ajax/' + sub + '/video_result_test',
-    type: "POST", 
-    cache: false,
-    data: {json_filepath:$("#download_test_video_result_json").val()},
-    dataType: "json",
-    success: function (ret) {
-      notify(ret['msg'], ret['ret']);  
-    }
-  });
+  global_send_command('test_video_result_json', {json_filepath:$("#download_test_video_result_json").val()});
 });
 
 

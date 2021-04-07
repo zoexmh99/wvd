@@ -110,11 +110,20 @@ class QueueDownload(object):
     @celery.task
     def start_video_result1(db_id, json_filepath):
         logger.debug(u"비디오 결과 분석 시작")
-        db_item = ModelWVDItem.get_by_id(db_id)
-        for site in QueueDownload.site_list:
-            if site.name == db_item.site:
-                entity = site(db_id, json_filepath)
-                entity.download_start()
-        return True
+        if db_id != -1:
+            db_item = ModelWVDItem.get_by_id(db_id)
+            for site in QueueDownload.site_list:
+                if site.name == db_item.site:
+                    entity = site(db_id, json_filepath)
+                    entity.download_start()
+                    break
+            return True
+        else:
+            site_name = os.path.basename(json_filepath).split('_')[0]
+            for site in QueueDownload.site_list:
+                if site.name == site_name:
+                    entity = site(db_id, json_filepath)
+                    entity.download_start()
+                    break
+            return True
 
-    

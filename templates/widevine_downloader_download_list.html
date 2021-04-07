@@ -33,8 +33,11 @@
         <span class="col-md-2">
           <select id="option1" name="option1" class="form-control form-control-sm">
             <option value="all">전체</option>
-            <option value="ready">준비</option>
-            <option value="receive_data">데이터수신</option>
+            <option value="ready">ready</option>
+            <option value="make_json">make_json</option>
+            <option value="send_url_success">send_url_success</option>
+            <option value="downloading">downloading</option>
+            
             <option value="completed">완료</option>
           </select>
         </span>
@@ -162,6 +165,7 @@ function make_list(data) {
     
     tmp2 = m_button('global_json_btn', 'JSON', [{'key':'id', 'value':data[i].id}]);
     tmp2 += m_button('global_remove_btn', '삭제', [{'key':'id', 'value':data[i].id}]);
+    tmp2 += m_button('set_status_ready_btn', 'SetReady', [{'key':'id', 'value':data[i].id}]);
     tmp += '<br>' + m_button_group(tmp2)
     str += m_col(7, tmp)
     str += m_row_end();
@@ -202,8 +206,18 @@ $("body").on('click', '#request_url_add_btn', function(e){
 
 
 $("body").on('click', '#download_start_btn', function(e){
-  global_send_command({command:'download_start'});
+  e.preventDefault();
+  global_send_command('download_start');
 });
+
+
+$("body").on('click', '#set_status_ready_btn', function(e){
+  e.preventDefault();
+  data = {status:'ready', db_id:$(this).data('id')};
+  console.log(data)
+  global_send_command('set_status', data);
+});
+
 
 
 

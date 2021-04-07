@@ -58,7 +58,7 @@ class Utility(object):
             if headers is not None:
                 for key, value in headers.items():
                     command.append('--header="%s:%s"' % (key, value))
-            command += ['"%s"' % url, '-o', '"%s"' % filepath]
+            command += ["'%s'" % url, '-o', "'%s'" % filepath]
             logger.debug(' '.join(command))
             os.system(' '.join(command))
         except Exception as exception: 
@@ -70,7 +70,7 @@ class Utility(object):
         try:
             if os.path.exists(target):
                 return
-            command = [MP4DUMP, '"%s"' % source, '>', '"%s"' % target]
+            command = [MP4DUMP, "'%s'" % source, '>', "'%s'" % target]
             os.system(' '.join(command))
         except Exception as exception: 
             logger.error('Exception:%s', exception)
@@ -81,7 +81,7 @@ class Utility(object):
         try:
             if os.path.exists(target):
                 return
-            command = [MP4INFO, '--format', 'json', '"%s"' % source, '>', '"%s"' % target]
+            command = [MP4INFO, '--format', 'json', "'%s'" % source, '>', "'%s'" % target]
             os.system(' '.join(command))
         except Exception as exception: 
             logger.error('Exception:%s', exception)
@@ -92,7 +92,7 @@ class Utility(object):
         try:
             if os.path.exists(target) or kid is None or key is None:
                 return
-            command = [MP4DECRYPT, '--key', '%s:%s' % (kid, key), '"%s"' % source, '"%s"' % target]
+            command = [MP4DECRYPT, '--key', '%s:%s' % (kid, key), "'%s'" % source, "'%s'" % target]
             os.system(' '.join(command))
         except Exception as exception: 
             logger.error('Exception:%s', exception)
@@ -183,7 +183,7 @@ class Utility(object):
         try:
             if os.path.exists(target):
                 return
-            command = [FFMPEG, '-i', '"%s"' % source,  '"%s"' % target]
+            command = [FFMPEG, '-i', "'%s'" % source,  "'%s'" % target]
             os.system(' '.join(command))
         except Exception as exception: 
             logger.error('Exception:%s', exception)

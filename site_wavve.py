@@ -20,32 +20,17 @@ from .utility import Utility
 from .entity_base import EntityBase
 
 #########################################################
-prime_headers = {
-    'Accept': '*/*',
-    'Connection': 'keep-alive',
-    'Origin': 'https://www.primevideo.com',
-    'Referer': 'https://www.primevideo.com/',
-    'Host': 'atv-ps-fe.primevideo.com',
-    'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36',
-    'Content-Length': '0',
-    'sec-ch-ua': '"Google Chrome";v="89", "Chromium";v="89", ";Not A Brand";v="99"',
-    'sec-ch-ua-mobile': '?0',
-    'Sec-Fetch-Dest': 'empty',
-    'Sec-Fetch-Mode': 'cors',
-    'Sec-Fetch-Site': 'same-site',
-}
 
 
 
 
-class EntityPrime(EntityBase):
-    url_regex = re.compile(r'www\.primevideo\.com(.*?)detail\/(?P<code>.*?)[\/$]')
-    name = 'prime'
-    name_on_filename = 'AMZN'
+class EntityWavve(EntityBase):
+    url_regex = re.compile(r'wavve\.com(.*?)(movieid|programid)=(?P<code>[_A-Z0-9]+)')
+    name = 'wavve'
+    name_on_filename = 'WAVVE'
 
     def __init__(self, db_id, json_filepath):
-        super(EntityPrime, self).__init__(db_id, json_filepath)
+        super(EntityWavve, self).__init__(db_id, json_filepath)
 
 
     def prepare(self):

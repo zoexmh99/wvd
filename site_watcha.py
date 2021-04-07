@@ -39,16 +39,9 @@ class EntityWatcha(EntityBase):
                     Utility.write_json(self.meta['source'], os.path.join(self.temp_dir, '{code}.meta.json'.format(code=self.code)))
                 if item['request']['method'] == 'GET' and item['request']['url'].find('tv_episodes.json?all=true') != -1:
                     res = self.get_response(item)
-                    logger.debug('111111111111111111111111111111')
                     tmp = res.json()
                     for code in tmp['tv_episode_codes']:
                         P.logic.get_module('download').queue_chrome_request.add_request_url('https://watcha.com/watch/%s' % code, '')
-
-                   
-                    logger.debug(json.dumps(tmp, indent=4))
-                    
-                    #self.meta['source'] = res.json()
-                    #Utility.write_json(self.meta['source'], os.path.join(self.temp_dir, '{code}.meta.json'.format(code=self.code)))
                     break
                 
             

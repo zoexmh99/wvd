@@ -40,6 +40,7 @@ class QueueChromeRequest(object):
                 self.process_chrome_request(db_id)
                 time.sleep(2)
                 self.queue.task_done()    
+                time.sleep(60)
             except Exception as e: 
                 logger.error('Exception:%s', e)
                 logger.error(traceback.format_exc())

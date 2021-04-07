@@ -121,7 +121,7 @@ class ModelWVDItem(db.Model):
                 conditions = []
                 for tt in tmp:
                     if tt != '':
-                        conditions.append(cls.client_target_name.like('%'+tt.strip()+'%') )
+                        conditions.append(cls.url.like('%'+tt.strip()+'%') )
                 query = query.filter(or_(*conditions))
             elif search.find(',') != -1:
                 tmp = search.split(',')
@@ -129,7 +129,7 @@ class ModelWVDItem(db.Model):
                     if tt != '':
                         query = query.filter(cls.client_target_name.like('%'+tt.strip()+'%'))
             else:
-                query = query.filter(cls.client_target_name.like('%'+search+'%'))
+                query = query.filter(cls.url.like('%'+search+'%'))
         if option1 != 'all':
             query = query.filter(cls.status == option1)
         if option2 != 'all':
@@ -151,6 +151,6 @@ class ModelWVDItem(db.Model):
 
     @classmethod
     def get_items_by_status(cls, status):
-        return db.session.query(cls).filter_by(status=status).all()
+        return db.session.query(cls).filter_by(status=status).order_by(cls.id).all()
 
 

@@ -27,6 +27,8 @@ class EntityBase(object):
             data = Utility.read_json(self.db_item.response_filepath)
         else:
             self.db_item = ModelWVDItem()
+            data = Utility.read_json(json_filepath)
+        
         self.temp_dir = os.path.join(Utility.tmp_dir, self.name)
         if os.path.exists(self.temp_dir) == False:
             os.makedirs(self.temp_dir)
@@ -54,9 +56,13 @@ class EntityBase(object):
         try:
             logger.debug(u'공통 처리')
             self.db_item.download_start_time = datetime.now()
-            self.set_status('downloading')
+            
 
             self.prepare()
+            if self.check_output_file():
+                logger.debug(u'output 파일 있음')
+                return
+            self.set_status('downloading')
             self.find_mpd()
             if self.mpd is not None:
                 self.analysis_mpd()
@@ -69,6 +75,35 @@ class EntityBase(object):
             if self.db_id != -1:
                 self.db_item.save()
         
+
+
+    def check_output_file(self):
+        check_filename = None
+        if self.meta['content_type'] == 'show':
+            regex = r'{title}\.S{season_number}E{episode_number}\.\d+p\.{site}\.WEB-DL\..*?\.SfKo\.mkv'.format(
+                title = u'%s' % self.meta['title'],
+                season_number = str(self.meta['season_number']).zfill(2),
+                episode_number = str(self.meta['episode_number']).zfill(2),
+                site = self.name_on_filename,
+            )
+            logger.debug(regex)
+            regex = re.compile(regex)
+        else:
+            regex = r'{title}\.\d+p\.{site}.WEB-DL.(.*?)\.SfKo\.mkv'.format(
+                title = u'%s' % self.meta['title'],
+                site = self.name_on_filename,
+            )
+            logger.debug(regex)
+            regex = re.compile(regex)
+
+        for filename in os.listdir(Utility.output_dir):
+            match = regex.match(filename)
+            logger.debug(u'파일명 : %s', filename)
+            if match:
+                logger.debug('파일 있음')
+                return True
+        return False
+
 
 
     def find_key(self, kid):
@@ -164,7 +199,7 @@ class EntityBase(object):
                     if os.path.exists(item['filepath_download']) and os.path.exists(item['filepath_dump']) == False:
                         Utility.mp4dump(item['filepath_download'], item['filepath_dump'])
 
-                    logger.debug(os.path.exists(item['filepath_merge']))
+                    #logger.debug(os.path.exists(item['filepath_merge']))
 
 
                     if os.path.exists(item['filepath_merge']) == False:
@@ -221,7 +256,7 @@ class EntityBase(object):
                     quality = self.download_list['video'][0]['height'],
                     audio_codec = self.audio_codec,
                     video_codec = self.download_list['video'][0]['codec_name'],
-                    site = self.name_on_filenmae,
+                    site = self.name_on_filename,
                 )
             self.filepath_output = os.path.join(Utility.output_dir, self.output_filename)
             logger.debug(self.merge_option + self.merge_option_etc)
@@ -242,7 +277,7 @@ class EntityBase(object):
     def clean(self):
         for filename in os.listdir(self.temp_dir):
             if filename.startswith(self.code):
-                #os.remove(os.path.join(self.temp_dir, filename))
+                os.remove(os.path.join(self.temp_dir, filename))
                 pass
 
 

@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 #from .plugin import blueprint, menu, plugin_load, plugin_unload, plugin_info
+try:
+    from selenium import webdriver
+except:
+    import os
+    from framework import app
+    os.system("{} install selenium".format(app.config['config']['pip']))
+    
 from .plugin import P
 blueprint = P.blueprint
 menu = P.menu
