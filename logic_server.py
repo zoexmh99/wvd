@@ -234,7 +234,7 @@ class LogicServer(LogicModuleBase):
                     P.logger.error(traceback.format_exc())
                 close_btn.click()
                 time.sleep(3)
-            except:
+            except Exception as e: 
                 P.logger.error('Exception:%s', e)
                 P.logger.error(traceback.format_exc())
 
