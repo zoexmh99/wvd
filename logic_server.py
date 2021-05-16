@@ -309,8 +309,8 @@ class LogicServer(LogicModuleBase):
             options = webdriver.ChromeOptions()
             options.add_argument("user-data-dir=%s" % chrome_data_path)
             options.add_argument("--proxy-server={0}".format(self.proxy.proxy))
-            options.add_argument('--ignore-certificate-errors')
-            #options.add_argument('--ignore-certificate-errors-spki-list')
+            options.add_argument('ignore-certificate-errors')
+            options.add_argument('--ignore-certificate-errors-spki-list')
 
             if headless:
                 options.add_argument('headless')
