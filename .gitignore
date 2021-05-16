@@ -4,3 +4,4 @@ __pycache__/
 chrome_data/
 download/
 tmp/
+*.log
