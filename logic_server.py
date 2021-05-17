@@ -166,9 +166,23 @@ class LogicServer(LogicModuleBase):
                     ret['msg'] = u'서버: chromedriver가 실행중이 아닙니다.'
                 else:
                     self.current_data = {'url':url, 'key' : [], 'client_ddns' : req.form['client_ddns']}
+                    #if url.find('kakao.com') != -1 and url.find('autoplay=1') == -1:
+                    #    url += '?autoplay=1'
+                    #https://tv.kakao.com/embed/player/cliplink/416395879?service=kakao_tv&section=channel&autoplay=1&profile=HIGH&wmode=transparent
+
                     self.chrome_driver_go(url)
                     ret['msg'] = u'서버: Go Success..'
-            
+
+                    def func():
+                        time.sleep(30)
+                        stop_timestamp = time.time()
+                        self.video_stop_thread_start(stop_timestamp)
+                        self.stop_timestamp = stop_timestamp
+                    tmp = threading.Thread(target=func, args=())
+                    tmp.start()
+
+
+                    
         return jsonify(ret)
 
 
@@ -176,6 +190,8 @@ class LogicServer(LogicModuleBase):
     
     stop_timestamp = None
     def video_stop_thread_start(self, stop_timestamp):
+        if self.driver is None:
+            return
         def func():
             if self.current_data['url'].find('primevideo') != -1:
                 time.sleep(20)
@@ -237,6 +253,7 @@ class LogicServer(LogicModuleBase):
             except Exception as e: 
                 P.logger.error('Exception:%s', e)
                 P.logger.error(traceback.format_exc())
+        #https://tv.kakao.com/embed/player/cliplink/419100695?service=kakao_tv&section=channel&profile=HIGH&wmode=transparent&popup=1&autoplay=1
 
         logger.debug('Driver Stop...')
         self.driver_stop()
@@ -335,6 +352,7 @@ class LogicServer(LogicModuleBase):
             options.add_argument("user-data-dir=%s" % chrome_data_path)
             options.add_argument("--proxy-server={0}".format(self.proxy.proxy))
             options.add_argument('ignore-certificate-errors')
+            options.add_argument('--ignore-certificate-errors-spki-list')
 
             capabilities = options.to_capabilities()
             self.driver = webdriver.Remote("http://localhost:%s" % ModelSetting.get('server_port'), capabilities)

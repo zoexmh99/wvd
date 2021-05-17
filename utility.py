@@ -50,27 +50,30 @@ class Utility(object):
         #--header="Cookie:.."
         try:
             if os.path.exists(filepath):
-                return
+                return True
             #if platform.system() == 'Windows':
             filepath = filepath.replace(path_app_root, '.')
 
             command = [ARIA2C]
             if headers is not None:
                 for key, value in headers.items():
-                    command.append('--header="%s:%s"' % (key, value))
-            command += ["'%s'" % url, '-o', "'%s'" % filepath]
+                    if value.find('"') == -1:
+                        command.append('--header="%s:%s"' % (key, value))
+            command += [url, '-o', filepath]
             logger.debug(' '.join(command))
             os.system(' '.join(command))
+            return os.path.exists(filepath)
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc()) 
+        return False
 
     @classmethod
     def mp4dump(cls, source, target):
         try:
             if os.path.exists(target):
                 return
-            command = [MP4DUMP, "'%s'" % source, '>', "'%s'" % target]
+            command = [MP4DUMP, source, '>', target]
             os.system(' '.join(command))
         except Exception as exception: 
             logger.error('Exception:%s', exception)
@@ -81,7 +84,7 @@ class Utility(object):
         try:
             if os.path.exists(target):
                 return
-            command = [MP4INFO, '--format', 'json', "'%s'" % source, '>', "'%s'" % target]
+            command = [MP4INFO, '--format', 'json', source, '>', target]
             os.system(' '.join(command))
         except Exception as exception: 
             logger.error('Exception:%s', exception)
@@ -92,7 +95,7 @@ class Utility(object):
         try:
             if os.path.exists(target) or kid is None or key is None:
                 return
-            command = [MP4DECRYPT, '--key', '%s:%s' % (kid, key), "'%s'" % source, "'%s'" % target]
+            command = [MP4DECRYPT, '--key', '%s:%s' % (kid, key), source, target]
             os.system(' '.join(command))
         except Exception as exception: 
             logger.error('Exception:%s', exception)
@@ -108,16 +111,6 @@ class Utility(object):
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc()) 
 
-
-
-    @classmethod
-    def vtt2srt(cls, source, target):
-        try:
-            command = [FFMPEG, '-i', '"%s"' % source, '"%s"' % target]
-            os.system(' '.join(command))
-        except Exception as exception: 
-            logger.error('Exception:%s', exception)
-            logger.error(traceback.format_exc()) 
 
 
     @classmethod
@@ -183,9 +176,21 @@ class Utility(object):
         try:
             if os.path.exists(target):
                 return
-            command = [FFMPEG, '-i', "'%s'" % source,  "'%s'" % target]
+            command = [FFMPEG, '-i', source,  target]
             os.system(' '.join(command))
         except Exception as exception: 
             logger.error('Exception:%s', exception)
-            logger.error(traceback.format_exc()) 
+            logger.error(traceback.format_exc())
+
+
     
+    @classmethod
+    def window_concat(cls, init_filepath, segment, target):
+        try:
+            if os.path.exists(target):
+                return
+            command = ['copy', '/B', init_filepath, '+%s' % segment, target]
+            os.system(' '.join(command))
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())

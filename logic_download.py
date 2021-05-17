@@ -43,11 +43,8 @@ class LogicDownload(LogicModuleBase):
         'downloadl_last_list_option' : '',
     }
 
-    
-    
-
     def __init__(self, P):
-        super(LogicDownload, self).__init__(P, 'queue')
+        super(LogicDownload, self).__init__(P, 'list')
         self.name = 'download'
         self.queue_chrome_request = QueueChromeRequest(self)
         self.queue_download = QueueDownload(self)
@@ -129,29 +126,15 @@ class LogicDownload(LogicModuleBase):
     #########################################################
 
     def queue_start(self):
+        """
         queue_list = ModelSetting.get_list('download_queue_list', '\n')
         for item in queue_list:
             logger.debug("URL : %s", item)
             self.send_url(item)
+        """
+        pass
 
 
     def queue_stop(self):
         pass
 
-
-    def send_url(self, url, is_test=False):
-        try:
-            server_url = '{server_ddns}/widevine_downloader/api/server/start'.format(server_ddns=ModelSetting.get('client_server_ddns'))
-            data={'apikey':ModelSetting.get('client_server_apikey'), 'url':url, 'client_ddns':SystemModelSetting.get('ddns')}
-            return requests.post(server_url, data=data).json()
-        except Exception as e: 
-            P.logger.error('Exception:%s', e)
-            P.logger.error(traceback.format_exc())
-            return {'ret':'warning', 'msg': str(e)}
-
-    
-   
-
-
-        
-    

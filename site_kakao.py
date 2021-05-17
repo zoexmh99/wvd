@@ -21,16 +21,33 @@ from .entity_base import EntityBase
 
 #########################################################
 
-class EntityWatcha(EntityBase):
-    url_regex = request_url_regex = re.compile(r'watcha\.com\/watch\/(?P<code>.*?)$')
-    name = 'watcha'
-    name_on_filename = 'WC'
+class EntityKakao(EntityBase):
+    url_regex = re.compile(r'kakao\.com\/channel\/\d+\/cliplink\/(?P<code>.*?)$')
+    request_url_regex = re.compile(r'kakao\.com\/embed\/player\/cliplink\/(?P<code>.*?)\?')
+    name = 'kakao'
+    name_on_filename = 'KAO'
 
 
     def __init__(self, db_id, json_filepath):
-        super(EntityWatcha, self).__init__(db_id, json_filepath)
+        super(EntityKakao, self).__init__(db_id, json_filepath)
+        
+
+    @classmethod
+    def get_request_url(cls, url):
+        match = cls.url_regex.search(url)
+        if match:
+            return 'https://tv.kakao.com/embed/player/cliplink/%s?service=kakao_tv&section=channel&autoplay=1&profile=HIGH&wmode=transparent' % match.group('code')
+        return url
+
+
 
     def prepare(self):
+        self.use_mpd_url = False
+        self.meta['content_type'] = 'show'
+        self.meta['title'] = self.code
+        self.meta['season_number'] = 1
+        self.meta['episode_number'] = 1
+        return
         try:
             for item in self.data['har']['log']['entries']:
                 if item['request']['method'] == 'GET' and item['request']['url'].find('%s.json' % self.code) != -1:
@@ -83,3 +100,4 @@ class EntityWatcha(EntityBase):
         except Exception as e: 
             P.logger.error('Exception:%s', e)
             P.logger.error(traceback.format_exc())
+

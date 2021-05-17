@@ -57,6 +57,7 @@ class QueueChromeRequest(object):
     
     # 테스트로 호출 될 수 있음.
     def send_url(self, url):
+        logger.warning('QueueChromeRequest %s', url)
         for i in range(5):
             try:
                 server_url = '{server_ddns}/widevine_downloader/api/server/start'.format(server_ddns=ModelSetting.get('client_server_ddns'))
@@ -104,8 +105,11 @@ class QueueChromeRequest(object):
             if match:
                 db_item.site = site.name
                 db_item.code = match.group('code')
+                logger.warning(site)
+                db_item.url = site.get_request_url(url)
                 break
-        logger.debug('site:[%s] code:[%s]', db_item.site, db_item.code)
+            
+        logger.warning('site:[%s] code:[%s]', db_item.site, db_item.code)
         if db_item.site is not None:
             tmp = ModelWVDItem.get_item_by_site_and_code(db_item.site, db_item.code)
             if tmp is None:

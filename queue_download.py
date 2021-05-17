@@ -20,13 +20,13 @@ from .utility import Utility
 from .model import ModelWVDItem
 from .site_prime import EntityPrime
 from .site_watcha import EntityWatcha
+from .site_kakao import EntityKakao
 
 #########################################################
 
 
 class QueueDownload(object):
-    site_list = [EntityPrime, EntityWatcha]
-
+    site_list = [EntityPrime, EntityWatcha, EntityKakao]
 
     def __init__(self, module):
         self.module = module
@@ -74,7 +74,7 @@ class QueueDownload(object):
     def receive_data(self, data):
         filename = '%s.json' % Util.change_text_for_use_filename(data['url'])[:100]
         for site in self.site_list:
-            match = site.url_regex.search(data['url'])
+            match = site.request_url_regex.search(data['url'])
             if match:
                 filename = '%s_%s.json' % (site.name, match.group('code'))
                 data['site'] = site.name

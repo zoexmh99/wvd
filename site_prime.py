@@ -40,7 +40,7 @@ prime_headers = {
 
 
 class EntityPrime(EntityBase):
-    url_regex = re.compile(r'www\.primevideo\.com(.*?)detail\/(?P<code>.*?)[\/$]')
+    url_regex = request_url_regex = re.compile(r'www\.primevideo\.com(.*?)detail\/(?P<code>.*?)[\/$]')
     name = 'prime'
     name_on_filename = 'AMZN'
 
@@ -92,7 +92,7 @@ class EntityPrime(EntityBase):
                     break
             logger.debug('AAAAAAAAAAAAAAAAAAAAAAAA')
             logger.debug(self.audio_url)
-
+            """
             if True:
                 #text = requests.get(self.data['url'], headers=prime_headers).text
                 #logger.debug(text)
@@ -103,7 +103,7 @@ class EntityPrime(EntityBase):
                         epi_list = re.compile(r'\<a\shref=\"(?P<url>\/region\/fe\/detail.*?)\"\s').findall(text)
                         for epi in epi_list:
                             P.logic.get_module('download').queue_chrome_request.add_request_url('https://www.primevideo.com/%s' % epi, '')
-
+            """
         except Exception as e: 
             P.logger.error('Exception:%s', e)
             P.logger.error(traceback.format_exc())
@@ -116,6 +116,9 @@ class EntityPrime(EntityBase):
 
             logger.debug('bbbbbbbbbbbbbbbbb')
             logger.debug(self.audio_url)
+            logger.warning('self.download_list : %s', self.download_list)
+            #self.download_list['video'][0]['url'] = re.sub('video_\d+\.mp4', 'video_12.mp4', self.download_list['video'][0]['url'])
+            logger.warning('self.download_list : %s', self.download_list)
             
             if self.audio_url is not None:
                 for audio_adaptation_set in self.adaptation_set['audio']:
