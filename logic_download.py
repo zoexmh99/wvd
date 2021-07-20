@@ -14,7 +14,7 @@ from lxml import etree as ET
 # sjva 공용
 from framework import db, scheduler, path_data, socketio, SystemModelSetting, app, celery
 from framework.util import Util
-from framework.common.util import headers, get_json_with_auth_session
+from framework.common.util import headers
 from framework.common.plugin import LogicModuleBase, default_route_socketio
 from tool_expand import ToolExpandFileProcess
 
