@@ -13,7 +13,7 @@ from selenium import webdriver
 from framework import db, scheduler, path_data, socketio, SystemModelSetting, app, celery, path_app_root
 from framework.util import Util
 from framework.common.util import headers
-from framework.common.plugin import LogicModuleBase, default_route_socketio
+from plugin import LogicModuleBase, default_route_socketio
 from tool_expand import ToolExpandFileProcess
 
 # 패키지
