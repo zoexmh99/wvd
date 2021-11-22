@@ -178,7 +178,7 @@ class Utility(object):
             if os.path.exists(filepath):
                 return True
             #if platform.system() == 'Windows':
-            filepath = filepath.replace(path_app_root, '.')
+            #filepath = filepath.replace(path_app_root, '.')
 
             command = [ARIA2C]
             if headers is not None:
@@ -187,7 +187,7 @@ class Utility(object):
                         # 
                         value = value.replace('"', '\\"')
                         command.append('--header="%s:%s"' % (key, value))
-            command += [f'"{url}"', '-o', filepath]
+            command += [f'"{url}"', '-d', os.path.dirname(filepath), '-o', os.path.basename(filepath)]
             if segment == False:
                 process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, encoding='utf8')
                 #logger.debug(' '.join(command))

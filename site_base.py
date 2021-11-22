@@ -19,11 +19,8 @@ from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support.select import Select
 
 
-
-
-# sjva 공용
-from framework import path_app_root
 from tool_base import d, ToolBaseFile
+
 # 패키지
 from .plugin import P
 logger = P.logger
@@ -298,7 +295,7 @@ class SiteBase(object):
 
     def download(self):
         try:
-            self.merge_option = ['-o', '"%s"' % self.filepath_mkv.replace(path_app_root, '.')]
+            self.merge_option = ['-o', '"%s"' % self.filepath_mkv]
             self.merge_option_etc = []
             self.audio_codec = ''
             for ct in ['video', 'audio']:
@@ -343,7 +340,7 @@ class SiteBase(object):
                             self.merge_option += ['--language', '0:%s' % item['lang']]
                         self.audio_codec += item['codec_name'] + '.'
                         logger.error(self.merge_option)
-                    self.merge_option += ['"%s"' % item['filepath_merge'].replace(path_app_root, '.')]
+                    self.merge_option += ['"%s"' % item['filepath_merge']]
 
             logger.error(self.download_list['text'])
             for item in self.download_list['text']:
@@ -372,13 +369,13 @@ class SiteBase(object):
                         self.merge_option += ['--forced-track', '"0:yes"']
                     else:
                         self.merge_option += ['--default-track', '"0:yes"']
-                    self.merge_option += ['"%s"' % item['filepath_merge'].replace(path_app_root, '.')]
+                    self.merge_option += ['"%s"' % item['filepath_merge']]
 
                 else:
                     self.merge_option_etc += ['--language', '"0:%s"' % item['lang']]
                     if item.get('force', False):
                         self.merge_option_etc += ['--forced-track', '"0:yes"']
-                    self.merge_option_etc += ['"%s"' % item['filepath_merge'].replace(path_app_root, '.')]
+                    self.merge_option_etc += ['"%s"' % item['filepath_merge']]
 
                    
 
