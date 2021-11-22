@@ -232,8 +232,13 @@ class Utility(object):
         try:
             if os.path.exists(target):
                 return
-            command = ['copy', '/B', init_filepath, '+%s' % segment, target]
-            os.system(' '.join(command))
+            if platform.system() == 'Windows':
+                command = ['copy', '/B', init_filepath, '+%s' % segment, target]
+                os.system(' '.join(command))
+            else:
+                cmd = f"cat {init_filepath} $(ls -vx {segment}) > {target}"
+                logger.error(cmd)
+                os.system(cmd)
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
@@ -267,6 +272,19 @@ class ToolSubprocess(object):
                     if force_log:
                         #logger.debug(ret[-1])
                         pass
+            if format is None:
+                ret2 = '\n'.join(ret)
+            elif format == 'json':
+                try:
+                    index = 0
+                    for idx, tmp in enumerate(ret):
+                        #logger.debug(tmp)
+                        if tmp.startswith('{') or tmp.startswith('['):
+                            index = idx
+                            break
+                    ret2 = json.loads(''.join(ret[index:]))
+                except:
+                    ret2 = None
             return ret2
         except Exception as exception: 
             logger.error('Exception:%s', exception)
