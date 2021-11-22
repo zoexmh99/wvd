@@ -97,3 +97,14 @@ ROOT\widevine_downloader\server\extension\netflix-1080p
 <SegmentTemplate timescale="30000" startNumber="1" media="video/avc1/2/seg-$Number$.m4s" initialization="video/avc1/2/init.mp4">
 
  <SegmentTemplate timescale="48000" startNumber="1" media="audio/mp4a/eng/seg-$Number$.m4s" initialization="audio/mp4a/eng/init.mp4">
+
+
+
+
+
+## 리눅스 클라이언트 
+  - aria2c
+
+  apt install -y aria2
+
+  apt install mkvtoolnix
