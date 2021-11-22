@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div>
+  {{ macros.m_button_group([['global_setting_save_btn', '설정 저장']])}}
+  {{ macros.m_row_start('5') }}
+  {{ macros.m_row_end() }}
+  <nav>
+    {{ macros.m_tab_head_start() }}
+      {{ macros.m_tab_head2('normal', '설정', true) }}
+    {{ macros.m_tab_head_end() }}
+  </nav>
+  <form id='setting' name='setting'>
+  <div class="tab-content" id="nav-tabContent">
+    {{ macros.m_tab_content_start('normal', true) }}
+      {{ macros.setting_button([['start_btn', '크롬 실행'], ['start_headless_btn', '크롬 Headless 실행'], ['stop_btn', '크롬 중지'], ['proxy_btn', 'Proxy']], '크롬 제어') }}
+      {{ macros.setting_input_text_and_buttons('server_test_url', 'URL Go', [['go_btn', 'GO']], value=arg['server_test_url']) }}
+      {{ macros.setting_input_text_and_buttons('blob_url', 'blob_url', [['blob_url_btn', 'GO']], value=arg['blob_url']) }}
+      <!--{{ macros.setting_radio('server_test_netflix_video', '넷플릭스 비디오 테스트', ['AVC Main', 'AVC High', 'VP9'], value=arg['server_test_netflix_video']) }}-->
+    {{ macros.m_tab_content_end() }}  
+
+
+
+  </div><!--tab-content-->
+  </form>
+</div> <!--전체-->
+
+
+
+<script type="text/javascript">
+var package_name = "{{arg['package_name'] }}";
+var sub = "{{arg['sub'] }}";
+
+$(document).ready(function(){
+});
+
+
+$("body").on('click', '#start_btn', function(e){
+  e.preventDefault();
+  global_send_command2('start');
+});
+
+$("body").on('click', '#start_headless_btn', function(e){
+  e.preventDefault();
+  global_send_command2('start', 'headless');
+});
+
+$("body").on('click', '#stop_btn', function(e){
+  e.preventDefault();
+  global_send_command2('stop');
+});
+
+
+
+$("body").on('click', '#go_btn', function(e){
+  e.preventDefault();
+  global_send_command2('go', $('#server_test_url').val());
+});
+
+
+$("body").on('click', '#proxy_btn', function(e){
+  e.preventDefault();
+  global_send_command2('proxy');
+});
+
+$("body").on('click', '#blob_url_btn', function(e){
+  e.preventDefault();
+  global_send_command2('blob_url', $('#blob_url').val());
+});
+
+
+
+function command(cmd, data=null) {
+  $.ajax({
+    url: '/' + package_name + '/ajax/' + sub + '/command',
+    type: "POST", 
+    cache: false,
+    data: {cmd:cmd, data:data},
+    dataType: "json",
+    success: function (ret) {
+      console.log(ret);
+      notify(ret['msg'], ret['ret']);  
+      //if (cmd == 'run' || cmd == 'stop') //$('#server_chromedriver_status').html(ret['data']);
+      if (cmd == 'run') $('#server_chromedriver_status').html('실행요청. 새로고침 하세요.');
+      else if (cmd == 'stop') $('#server_chromedriver_status').html('중지요청. 새로고침 하세요.');
+    }
+  });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+$('#jav_censored_include_original_filename').change(function() {
+  use_collapse('jav_censored_include_original_filename');
+});
+
+$('input[type=radio][name=jav_censored_use_meta]').change(function() {
+  use_meta(this.value);
+});
+
+function use_meta(value) {
+  if (value == 0) {
+    $('#jav_censored_use_meta_on_div').collapse('hide');
+    $('#jav_censored_use_meta_off_div').collapse('show');
+  } else {
+    $('#jav_censored_use_meta_on_div').collapse('show');
+    $('#jav_censored_use_meta_off_div').collapse('hide');
+  }
+}
+
+$("body").on('click', '#jav_censored_filename_test_btn', function(e){
+  e.preventDefault();
+  filename = document.getElementById("jav_censored_filename_test").value;
+  $.ajax({
+    url: '/' + package_name + '/ajax/' + sub + '/filename_test',
+    type: "POST", 
+    cache: false,
+    data: {filename:filename},
+    dataType: "json",
+    success: function (ret) {
+      m_modal(ret)
+    }
+  });
+});
+
+</script>    
+{% endblock %}

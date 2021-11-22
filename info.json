@@ -1,0 +1,10 @@
+{
+    "version": "0.2.0.0",
+    "name": "widevine_downloader",
+    "category_name": "tool",
+    "icon": "",
+    "developer": "soju6jan",
+    "description": "DRM 영상 다운로드",
+    "home": "https://github.com/soju6jan/widevine_downloader",
+    "more": ""
+}
