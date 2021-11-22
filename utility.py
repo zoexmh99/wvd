@@ -41,92 +41,6 @@ if platform.system() != 'Windows':
     
 import os, sys, traceback, subprocess, json, platform
 from framework import app, logger
-class ToolSubprocess(object):
-
-    @classmethod
-    def execute_command_return(cls, command, format=None, force_log=True, shell=False, env=None, timeout=1000):
-        logger.debug(timeout)
-        try:
-            #logger.debug('execute_command_return : %s', ' '.join(command))
-            if app.config['config']['running_type'] == 'windows':
-                """
-                tmp = []
-                if type(command) == type([]):
-                    for x in command:
-                        if x.find(' ') == -1:
-                            tmp.append(x)
-                        else:
-                            tmp.append(f'"{x}"')
-                    command = ' '.join(tmp)
-                """
-                command =  ' '.join(command)
-
-            iter_arg =  b'' if app.config['config']['is_py2'] else ''
-            logger.debug(command)
-            process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, shell=shell, env=env, encoding='utf8')
-            
-            #process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, shell=shell, env=env, encoding='utf8')
-
-            try:
-                logger.debug("다운로드 대기중")
-                process_ret = process.wait(timeout=timeout) # wait for the subprocess to exit
-            except:
-                #logger.debug(f"PROCESS_RET : {process_ret}")
-                #if process_ret is None: # timeout
-                import psutil
-                process = psutil.Process(process.pid)
-                for proc in process.children(recursive=True):
-                    proc.kill()
-                process.kill()
-                return "timeout"
-                #return "timeout"
-                
-
-            ret = []
-            with process.stdout:
-                for line in iter(process.stdout.readline, iter_arg):
-                    ret.append(line.strip())
-                    if force_log:
-                        logger.debug(ret[-1])
-            """
-            ret = []
-            with process.stdout:
-                for line in iter(process.stdout.readline, iter_arg):
-                    ret.append(line.strip())
-                    if force_log:
-                        logger.debug(ret[-1])
-                logger.debug(f"PROCESS_RET000 : {timeout}")
-                process_ret = process.wait(timeout=timeout) # wait for the subprocess to exit
-                logger.debug(f"PROCESS_RET : {process_ret}")
-                if process_ret is None: # timeout
-                    import psutil
-                    process = psutil.Process(process.pid)
-                    for proc in process.children(recursive=True):
-                        proc.kill()
-                    process.kill()
-                    return "timeout"
-            """ 
-
-
-            if format is None:
-                ret2 = '\n'.join(ret)
-            elif format == 'json':
-                try:
-                    index = 0
-                    for idx, tmp in enumerate(ret):
-                        #logger.debug(tmp)
-                        if tmp.startswith('{') or tmp.startswith('['):
-                            index = idx
-                            break
-                    ret2 = json.loads(''.join(ret[index:]))
-                except:
-                    ret2 = None
-
-            return ret2
-        except Exception as exception: 
-            logger.error('Exception:%s', exception)
-            logger.error(traceback.format_exc())
-            logger.error('command : %s', command)
 
 
 class Utility(object):
@@ -134,33 +48,6 @@ class Utility(object):
     tmp_dir = os.path.join(download_dir, 'tmp')
     proxy_dir = os.path.join(download_dir, 'proxy')
     output_dir = os.path.join(download_dir, 'output')
-
-    """
-    @classmethod
-    def aria2c_download(cls, url, filepath, headers=None):
-        #--header="Cookie:.."
-        try:
-            if os.path.exists(filepath):
-                return True
-            #if platform.system() == 'Windows':
-            filepath = filepath.replace(path_app_root, '.')
-
-            command = [ARIA2C]
-            if headers is not None:
-                for key, value in headers.items():
-                    if value.find('"') == -1:
-                        command.append('--header="%s:%s"' % (key, value))
-            command += [f'"{url}"', '-o', filepath]
-
-            #subprocess.check_output
-            logger.debug(' '.join(command))
-            os.system(' '.join(command))
-            return os.path.exists(filepath)
-        except Exception as exception: 
-            logger.error('Exception:%s', exception)
-            logger.error(traceback.format_exc()) 
-        return False
-    """
 
     @classmethod
     def makedirs(cls):
@@ -177,20 +64,21 @@ class Utility(object):
         try:
             if os.path.exists(filepath):
                 return True
-            #if platform.system() == 'Windows':
-            #filepath = filepath.replace(path_app_root, '.')
-
-            command = [ARIA2C]
-            if headers is not None:
-                for key, value in headers.items():
-                    #if value.find('"') == -1:
-                        # 
+            command = [ARIA2C]                
+            if platform.system() == 'Windows':
+                if headers is not None:
+                    for key, value in headers.items():
                         value = value.replace('"', '\\"')
                         command.append('--header="%s:%s"' % (key, value))
-            command += [f'"{url}"', '-d', os.path.dirname(filepath), '-o', os.path.basename(filepath)]
+                command += [f'"{url}"', '-d', os.path.dirname(filepath), '-o', os.path.basename(filepath)]
+            else:
+                if headers is not None:
+                    for key, value in headers.items():
+                        value = value.replace('"', '\\"')
+                        command.append('--header=%s:%s' % (key, value))
+                command += [url, '-d', os.path.dirname(filepath), '-o', os.path.basename(filepath)]
+
             if segment == False:
-                process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, encoding='utf8')
-                #logger.debug(' '.join(command))
                 os.system(' '.join(command))
             else:
                 ret = ToolSubprocess.execute_command_return(command, timeout=10)
@@ -204,10 +92,7 @@ class Utility(object):
                     except Exception as exception: 
                         logger.error('Exception:%s', exception)
                         logger.error(traceback.format_exc()) 
-
                     return cls.aria2c_download(url, filepath, headers=headers)
-            
-
             return os.path.exists(filepath)
         except Exception as exception: 
             logger.error('Exception:%s', exception)
@@ -352,3 +237,38 @@ class Utility(object):
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
+
+
+
+class ToolSubprocess(object):
+
+    @classmethod
+    def execute_command_return(cls, command, format=None, force_log=True, shell=False, env=None, timeout=1000):
+        logger.debug(timeout)
+        try:
+            if app.config['config']['running_type'] == 'windows':
+                command =  ' '.join(command)
+
+            iter_arg =  b'' if app.config['config']['is_py2'] else ''
+            process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, shell=shell, env=env, encoding='utf8')
+            try:
+                process_ret = process.wait(timeout=timeout) # wait for the subprocess to exit
+            except:
+                import psutil
+                process = psutil.Process(process.pid)
+                for proc in process.children(recursive=True):
+                    proc.kill()
+                process.kill()
+                return "timeout"
+            ret = []
+            with process.stdout:
+                for line in iter(process.stdout.readline, iter_arg):
+                    ret.append(line.strip())
+                    if force_log:
+                        #logger.debug(ret[-1])
+                        pass
+            return ret2
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())
+            logger.error('command : %s', command)
