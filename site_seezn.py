@@ -1,7 +1,7 @@
 import os, sys, traceback, re, json, threading, time, shutil, subprocess, psutil
 from urllib import parse
 from datetime import datetime
-from .site_base import SiteBase, d, logger, package_name, ModelSetting, Utility, P, webdriver, WebDriverWait, EC, By, Keys, path_app_root, ToolBaseFile
+from .site_base import SiteBase, d, logger, package_name, ModelSetting, Utility, P, webdriver, WebDriverWait, EC, By, Keys, ToolBaseFile
 
 class SiteSeezn(SiteBase):
     name = 'seezn'
@@ -83,7 +83,7 @@ class SiteSeezn(SiteBase):
                         m3u8_data[ct]['url_list'].append(line)
 
             self.filepath_mkv = os.path.join(self.temp_dir, f"{self.code}.mkv")
-            merge_option = ['-o', '"%s"' % self.filepath_mkv.replace(path_app_root, '.')]  
+            merge_option = ['-o', '"%s"' % self.filepath_mkv]  
             for ct in ['video', 'audio']:
                 m3u8_data[ct]['contentType'] = ct
                 self.make_filepath(m3u8_data[ct])
@@ -112,7 +112,7 @@ class SiteSeezn(SiteBase):
 
                 #if ct == 'audio':
                 #    merge_option += ['--language', '0:%s' % m3u8_data[ct]['lang']]
-                merge_option += ['"%s"' % m3u8_data[ct]['filepath_merge'].replace(path_app_root, '.')]
+                merge_option += ['"%s"' % m3u8_data[ct]['filepath_merge']]
                 
             if self.meta['content_type'] == 'show':
                 self.output_filename = u'{title}.S{season_number}E{episode_number}.1080p.WEB-DL.AAC.H.264.SW{site}.mkv'.format(

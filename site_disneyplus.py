@@ -1,6 +1,6 @@
 import os, sys, traceback, re, json, threading, time, shutil, subprocess, psutil
 from datetime import datetime
-from .site_base import SiteBase, d, logger, package_name, ModelSetting, Utility, P, webdriver, WebDriverWait, EC, By, Keys, path_app_root, ToolBaseFile
+from .site_base import SiteBase, d, logger, package_name, ModelSetting, Utility, P, webdriver, WebDriverWait, EC, By, Keys, ToolBaseFile
 
 class SiteDisney(SiteBase):
     name = 'disney'
@@ -91,7 +91,7 @@ class SiteDisney(SiteBase):
                 m3u8_data[ct]['url_list'] = source_list[max_key]
 
             self.filepath_mkv = os.path.join(self.temp_dir, f"{self.code}.mkv")
-            merge_option = ['-o', '"%s"' % self.filepath_mkv.replace(path_app_root, '.')]  
+            merge_option = ['-o', '"%s"']  
             for ct in ['video', 'audio', 'text']:
                 m3u8_data[ct]['contentType'] = ct
                 self.make_filepath(m3u8_data[ct])
@@ -125,7 +125,7 @@ class SiteDisney(SiteBase):
                     #Utility.ffmpeg_copy(m3u8_data[ct]['filepath_merge'], m3u8_data[ct]['filepath_merge2'])
                     if ct == 'audio':
                         merge_option += ['--language', '0:%s' % m3u8_data[ct]['lang']]
-                    merge_option += ['"%s"' % m3u8_data[ct]['filepath_merge'].replace(path_app_root, '.')]
+                    merge_option += ['"%s"' % m3u8_data[ct]['filepath_merge']]
                 else:
                     sub = ''
                     last_time = None
@@ -146,7 +146,7 @@ class SiteDisney(SiteBase):
                     Utility.vtt2srt(m3u8_data[ct]['filepath_download'], m3u8_data[ct]['filepath_merge'])
                     merge_option += ['--language', '"0:ko"'] 
                     merge_option += ['--default-track', '"0:yes"']
-                    merge_option += ['"%s"' % m3u8_data[ct]['filepath_merge'].replace(path_app_root, '.')]
+                    merge_option += ['"%s"' % m3u8_data[ct]['filepath_merge']]
 
             if self.meta['content_type'] == 'show':
                 self.output_filename = u'{title}.S{season_number}E{episode_number}.720p.WEB-DL.AAC.H.264.SW{site}.mkv'.format(
