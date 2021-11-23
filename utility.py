@@ -1,28 +1,13 @@
-# -*- coding: utf-8 -*-
-#########################################################
-# python
-import os, sys, traceback, re, json, threading, time, shutil, subprocess, psutil, codecs
+import os, sys, traceback, re, json, threading, time, shutil, subprocess, psutil, codecs, platform
 from datetime import datetime
-# third-party
-import requests
-# third-party
-from flask import request, render_template, jsonify, redirect
-from selenium import webdriver
 
-# sjva 공용
-from framework import db, scheduler, path_data, socketio, SystemModelSetting, app, celery, path_app_root
-from framework.util import Util
-from framework.common.util import headers, get_json_with_auth_session
-from framework.common.plugin import LogicModuleBase, default_route_socketio
-from tool_expand import ToolExpandFileProcess
+from framework import path_data, app
 
-# 패키지
 from .plugin import P
 logger = P.logger
 package_name = P.package_name
 ModelSetting = P.ModelSetting
 
-import platform
 
 bin_dir = os.path.join(os.path.dirname(__file__), 'bin', platform.system())
 ARIA2C = os.path.join(bin_dir, 'aria2c' + ('.exe' if platform.system() == 'Windows' else ''))
@@ -36,11 +21,6 @@ if platform.system() != 'Windows':
     ARIA2C = 'aria2c'
     FFMPEG = 'ffmpeg'
     MKVMERGE = 'mkvmerge'
-#apt-get install mkvtoolnix
-
-    
-import os, sys, traceback, subprocess, json, platform
-from framework import app, logger
 
 
 class Utility(object):
@@ -60,7 +40,6 @@ class Utility(object):
 
     @classmethod
     def aria2c_download(cls, url, filepath, headers=None, segment=True):
-        #--header="Cookie:.."
         try:
             if os.path.exists(filepath):
                 return True
@@ -228,7 +207,7 @@ class Utility(object):
 
     
     @classmethod
-    def window_concat(cls, init_filepath, segment, target):
+    def concat(cls, init_filepath, segment, target):
         try:
             if os.path.exists(target):
                 return

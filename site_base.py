@@ -449,7 +449,7 @@ class SiteBase(object):
                 filepath = os.path.join(self.temp_dir, f"{self.code}_{item['ct']}_{str(i).zfill(5)}.m4f")
                 if Utility.aria2c_download(url, filepath, headers=headers) == False:
                     break
-        Utility.window_concat(init_filepath, os.path.join(self.temp_dir, f"{self.code}_{item['ct']}_0*.m4f"), item['filepath_download'])
+        Utility.concat(init_filepath, os.path.join(self.temp_dir, f"{self.code}_{item['ct']}_0*.m4f"), item['filepath_download'])
 
 
     def clean(self):
