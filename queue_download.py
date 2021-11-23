@@ -28,12 +28,11 @@ from .site_wavve import SiteWavve
 from .site_watcha import SiteWatcha
 from .site_laftel import SiteLaftel
 from .site_seezn import SiteSeezn
-
+from .site_serieson import SiteSerieson
 from .site_netflix import SiteNetflix
 from .site_prime import SitePrime
 from .site_disneyplus import SiteDisney
 """
-
 시리즈온
 """
 #########################################################
@@ -41,7 +40,7 @@ from .site_disneyplus import SiteDisney
 # 다운로드 
 
 class QueueDownload(object):
-    site_list = [SiteTving, SiteCoupang, SiteKakao, SiteWavve, SiteWatcha, SiteNetflix, SitePrime, SiteLaftel, SiteDisney, SiteSeezn]
+    site_list = [SiteTving, SiteCoupang, SiteKakao, SiteWavve, SiteWatcha, SiteNetflix, SitePrime, SiteLaftel, SiteDisney, SiteSeezn]#, SiteSerieson]
 
     def __init__(self, module):
         self.module = module

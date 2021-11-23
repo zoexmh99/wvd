@@ -6,5 +6,6 @@
     "developer": "soju6jan",
     "description": "DRM 영상 다운로드",
     "home": "https://github.com/soju6jan/widevine_downloader",
-    "more": ""
+    "more": "",
+    "policy_level": 5
 }

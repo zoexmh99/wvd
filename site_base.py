@@ -148,7 +148,7 @@ class SiteBase(object):
                     mpd_item = item
                     break
             res = self.get_response(mpd_item)
-            logger.error(f"MPD response : {res}")
+            #logger.error(f"MPD response : {res}")
             self.mpd = MPEGDASHParser.parse(res.text)    
             for item in mpd_item['request']['headers']:
                 self.mpd_headers[item['name']] = item['value']
@@ -277,15 +277,15 @@ class SiteBase(object):
                         max_item = item
                 self.download_list[ct].append(self.make_filepath(max_item))                      
 
-            logger.warning(d(self.adaptation_set['text']))
+            #logger.warning(d(self.adaptation_set['text']))
             # 왓챠는 TEXT  adaptation_set이 여러개
             #if len(self.adaptation_set['text']) > 0:
             for adaptation_set in self.adaptation_set['text']:
                 if adaptation_set['representation'] is not None:
                     for item in adaptation_set['representation']:
-                        logger.error(item['url'])
+                        #logger.error(item['url'])
                         item['url'] = item['url'].replace('&amp;', '&')
-                        logger.error(item['url'])
+                        #logger.error(item['url'])
                         self.download_list['text'].append(self.make_filepath(item))
             logger.warning(d(self.download_list))
         except Exception as e: 
@@ -303,7 +303,7 @@ class SiteBase(object):
                 for item in self.download_list[ct]:
                     logger.debug(item['url'])
                     if item['url'] is not None:
-                        logger.warning(item['filepath_download'])
+                        #logger.warning(item['filepath_download'])
                         if os.path.exists(item['filepath_download']) == False:
                             logger.debug("다운로드 시작")
                             Utility.aria2c_download(item['url'], item['filepath_download'], segment=False)
@@ -339,10 +339,10 @@ class SiteBase(object):
                         if item['lang'] != None:
                             self.merge_option += ['--language', '0:%s' % item['lang']]
                         self.audio_codec += item['codec_name'] + '.'
-                        logger.error(self.merge_option)
+                        #logger.error(self.merge_option)
                     self.merge_option += ['"%s"' % item['filepath_merge']]
 
-            logger.error(self.download_list['text'])
+            #logger.error(self.download_list['text'])
             for item in self.download_list['text']:
                 if os.path.exists(item['filepath_download']) == False:
                     Utility.aria2c_download(item['url'], item['filepath_download'], headers=self.mpd_headers if item['url'].startswith(self.mpd_base_url) else {})
@@ -397,13 +397,13 @@ class SiteBase(object):
                     video_codec = self.download_list['video'][0]['codec_name'],
                     site = self.name_on_filename,
                 )
-            logger.warning(self.output_filename)
+            #logger.warning(self.output_filename)
             self.filepath_output = os.path.join(Utility.output_dir, self.output_filename)
-            logger.warning(d(self.merge_option + self.merge_option_etc))
+            #logger.warning(d(self.merge_option + self.merge_option_etc))
             
             if os.path.exists(self.filepath_output) == False:
-                logger.error(self.merge_option)
-                logger.error(self.merge_option_etc)
+                #logger.error(self.merge_option)
+                #logger.error(self.merge_option_etc)
                 Utility.mkvmerge(self.merge_option + self.merge_option_etc)
                 shutil.move(self.filepath_mkv, self.filepath_output)
                 self.add_log(f'파일 생성: {self.output_filename}')

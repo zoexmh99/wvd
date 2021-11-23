@@ -3,7 +3,6 @@
 # python
 import os, sys, traceback, re, json, threading, time, shutil, subprocess, psutil, base64
 from datetime import datetime
-# third-party
 import requests
 # third-party
 from flask import request, render_template, jsonify, redirect
@@ -19,18 +18,11 @@ from selenium.webdriver.support.select import Select
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 
-# sjva 공용
-from framework import db, scheduler, path_data, socketio, SystemModelSetting, app, celery
-from plugin import LogicModuleBase
-from tool_base import d, ToolBaseFile
-
+from tool_base import ToolBaseFile
 from browsermobproxy import Server
-# 패키지
-from .plugin import P
-logger = P.logger
-package_name = P.package_name
-ModelSetting = P.ModelSetting
 
+# 패키지
+from .plugin import P, d, logger, package_name, ModelSetting, LogicModuleBase, app, path_data, path_app_root
 #########################################################
 
 name = 'server'
@@ -117,6 +109,9 @@ class LogicServer(LogicModuleBase):
                     f.write(bytes)
                     f.close()
                     ret['msg'] = '저장하였습니다.'
+                elif cmd == 'capture_content':
+                    self.proxy.new_har('test' if self.current_data == None else self.current_data['url'], options={'captureHeaders': True, 'captureContent':True})
+
                 return jsonify(ret)
         except Exception as e: 
             P.logger.error('Exception:%s', e)

@@ -13,7 +13,7 @@
   <form id='setting' name='setting'>
   <div class="tab-content" id="nav-tabContent">
     {{ macros.m_tab_content_start('normal', true) }}
-      {{ macros.setting_button([['start_btn', '크롬 실행'], ['start_headless_btn', '크롬 Headless 실행'], ['stop_btn', '크롬 중지'], ['proxy_btn', 'Proxy']], '크롬 제어') }}
+      {{ macros.setting_button([['start_btn', '크롬 실행'], ['start_headless_btn', '크롬 Headless 실행'], ['stop_btn', '크롬 중지'], ['proxy_btn', 'Proxy'], ['capture_content_btn', 'Proxy Capture Content']], '크롬 제어') }}
       {{ macros.setting_input_text_and_buttons('server_test_url', 'URL Go', [['go_btn', 'GO']], value=arg['server_test_url']) }}
       {{ macros.setting_input_text_and_buttons('blob_url', 'blob_url', [['blob_url_btn', 'GO']], value=arg['blob_url']) }}
     {{ macros.m_tab_content_end() }}  
@@ -49,6 +49,10 @@ $("body").on('click', '#stop_btn', function(e){
   global_send_command2('stop');
 });
 
+$("body").on('click', '#capture_content_btn', function(e){
+  e.preventDefault();
+  global_send_command2('capture_content');
+});
 
 
 $("body").on('click', '#go_btn', function(e){
