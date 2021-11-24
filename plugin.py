@@ -31,7 +31,7 @@ class P(object):
     }  
 
     plugin_info = {
-        'version' : '0.2.0.0',
+        'version' : '1.1.0',
         'name' : package_name,
         'category_name' : 'tool',
         'icon' : '',

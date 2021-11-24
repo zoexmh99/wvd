@@ -52,7 +52,7 @@ class LogicDownload(LogicModuleBase):
     def process_menu(self, sub, req):
         arg = P.ModelSetting.to_dict()
         arg['sub'] = self.name
-        
+        arg['version'] = P.plugin_info['version']
         try:
             return render_template('{package_name}_{module_name}_{sub}.html'.format(package_name=P.package_name, module_name=self.name, sub=sub), arg=arg)
         except Exception as e: 

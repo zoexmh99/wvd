@@ -2,7 +2,8 @@
 {% block content %}
  
 <div>
-  {{ macros.m_button_group([['request_url_add_btn', 'URL111 추가'], ['global_one_execute_sub_btn', '1회 실행']]) }}
+  버전 : {{ arg['version']}}
+  {{ macros.m_button_group([['request_url_add_btn', 'URL 추가'], ['global_one_execute_sub_btn', '1회 실행']]) }}
   {{ macros.m_row_start('5') }}
   {{ macros.m_row_end() }}
   <div class="container-fluid row show-grid">
