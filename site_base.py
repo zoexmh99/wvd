@@ -345,7 +345,7 @@ class SiteBase(object):
             #logger.error(self.download_list['text'])
             for item in self.download_list['text']:
                 if os.path.exists(item['filepath_download']) == False:
-                    Utility.aria2c_download(item['url'], item['filepath_download'], headers=self.mpd_headers if item['url'].startswith(self.mpd_base_url) else {})
+                    Utility.aria2c_download(item['url'], item['filepath_download'], headers=self.mpd_headers if self.mpd_base_url is not None and item['url'].startswith(self.mpd_base_url) else {})
                 if os.path.exists(item['filepath_download']) and os.path.exists(item['filepath_merge']) == False:
                     if item['mimeType'] == 'text/ttml':
                         Utility.ttml2srt(item['filepath_download'], item['filepath_merge'])

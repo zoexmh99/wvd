@@ -64,12 +64,18 @@ class SiteDisney(SiteBase):
                         m3u8_data['audio']['data'] = self.get_response(item).text
                         Utility.write_file(os.path.join(self.temp_dir, f"{self.code}.audio.m3u8"), m3u8_data['audio']['data'])
                         m3u8_data['audio']['lang'] = item['request']['url'].split('/')[-1].split('_')[3]
-                    if item['request']['url'].find('ko_NORMAL') != -1 and m3u8_data['text'] == None:
+                    if item['request']['url'].find('_ko_') != -1 and m3u8_data['text'] == None:
                         m3u8_data['text'] = {'lang':'ko', 'mimeType':'text/vtt'}
                         m3u8_data['audio']['url'] = item['request']['url']
                         m3u8_data['text']['data'] = self.get_response(item).text
                         Utility.write_file(os.path.join(self.temp_dir, f"{self.code}.text.m3u8"), m3u8_data['text']['data'])
-            
+                    """
+                    if item['request']['url'].find('_en_') != -1 and m3u8_data['text'] == None:
+                        m3u8_data['text'] = {'lang':'en', 'mimeType':'text/vtt'}
+                        m3u8_data['audio']['url'] = item['request']['url']
+                        m3u8_data['text']['data'] = self.get_response(item).text
+                        Utility.write_file(os.path.join(self.temp_dir, f"{self.code}.text.m3u8"), m3u8_data['text']['data'])
+                    """
             for ct in ['video', 'audio', 'text']:
                 if m3u8_data[ct] == None:
                     continue
@@ -91,8 +97,10 @@ class SiteDisney(SiteBase):
                 m3u8_data[ct]['url_list'] = source_list[max_key]
 
             self.filepath_mkv = os.path.join(self.temp_dir, f"{self.code}.mkv")
-            merge_option = ['-o', '"%s"']  
+            merge_option = ['-o', f'"{self.filepath_mkv}"']  
             for ct in ['video', 'audio', 'text']:
+                if m3u8_data[ct]['contentType'] == None:
+                    continue
                 m3u8_data[ct]['contentType'] = ct
                 self.make_filepath(m3u8_data[ct])
                 if ct in ['video', 'audio']:
