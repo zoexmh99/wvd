@@ -50,7 +50,7 @@ class SiteBase(object):
         self.mpd_headers = {}
         self.download_list = {'video':[], 'audio':[], 'text':[]}
         self.filepath_mkv = os.path.join(self.temp_dir, '{code}.mkv'.format(code=self.code))
-        self.meta = {}
+        self.meta = {'content_type':'movie', 'title':self.code, 'season_number':1, 'episode_number':1}
         self.use_mpd_url = True
         
         #self.default_process()
