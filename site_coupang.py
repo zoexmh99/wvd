@@ -5,7 +5,7 @@ from .site_base import SiteBase, d, logger, package_name, ModelSetting, Utility,
 class SiteCoupang(SiteBase):
     name = 'coupang'
     name_on_filename = 'CP'
-    url_regex = request_url_regex = re.compile(r'coupangplay\.com\/play\/(?P<code>.*)\?type=(MOVIE|EPISODE)')
+    url_regex = request_url_regex = re.compile(r'coupangplay\.com\/play\/(?P<code>.*)\/(movie|episode)')
 
     def __init__(self, db_id, json_filepath):
         super(SiteCoupang, self).__init__(db_id, json_filepath)
