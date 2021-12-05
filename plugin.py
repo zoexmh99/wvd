@@ -11,7 +11,7 @@ class P(object):
     menu = {
         'main' : [package_name, 'widevine 다운로드'],
         'sub' : [
-            ['server', '서버'], ['client', '클라이언트'], ['download', '다운로드'], ['kakao', '카카오TV 자동'], ['manual', '매뉴얼'], ['log', '로그'] 
+            ['server', '서버'], ['client', '클라이언트'], ['download', '다운로드'], ['auto', '자동'], ['manual', '매뉴얼'], ['log', '로그'] 
         ], 
         'category' : 'tool',
         'sub2' : {
@@ -24,7 +24,7 @@ class P(object):
             'download' : [
                 ['list', '목록'], ['setting', '설정'], 
             ],
-            'kakao' : [
+            'auto' : [
                 ['setting', '설정'], ['list', '목록'], 
             ],
             'manual' : [
@@ -66,8 +66,8 @@ def initialize():
         from .logic_server import LogicServer
         from .logic_client import LogicClient
         from .logic_download import LogicDownload
-        from .logic_kakao import LogicKakao
-        P.module_list = [LogicServer(P), LogicClient(P), LogicDownload(P), LogicKakao(P)]
+        from .logic_auto import LogicAuto
+        P.module_list = [LogicServer(P), LogicClient(P), LogicDownload(P), LogicAuto(P)]
         P.logic = Logic(P)
         default_route(P)
     except Exception as e: 

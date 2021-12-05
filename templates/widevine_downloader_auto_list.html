@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% block content %}
+
+
+
+{{ macros.m_button_group([['global_reset_db_sub_btn', 'DB 초기화'], ['remove_no_append_data_btn', '추가 파일이 없는 데이터 삭제'], ['all_append_files_show_btn', '모두 확장'], ['all_append_files_hide_btn', '모두 축소'] ])}}
+{{ macros.m_row_start('5') }}
+{{ macros.m_row_end() }}
+
+
+{{ macros.m_hr_head_bottom() }}
+
+<div>
+  <form id="form_search" class="form-inline" style="text-align:left">
+    <div class="container-fluid">
+      <div class="row show-grid">
+        <span class="col-md-6">
+          <select id="order" name="order" class="form-control form-control-sm">
+            <option value="desc">최근순</option>
+            <option value="asc">오래된순</option>
+          </select>
+          <select id="option1" name="option1" class="form-control form-control-sm">
+            <option value="all" selected>전체</option>
+            {% if arg['library_list'] is not none %}
+            {% for item in arg['library_list'] %}
+              <option value="{{ item['id'] }}">{{item['name']}}</option>
+            {% endfor %}
+            {% endif %}
+          </select>
+          <select id="option2" name="option2" class="form-control form-control-sm">
+            <option value="all" selected>전체</option>
+            <option value="append">추가된 항목만</option>
+          </select>
+        </span>
+        <span class="col-md-6">
+          <input id="keyword" name="keyword" class="form-control form-control-sm w-75" type="text" placeholder="Target" aria-label="Search">
+          <button id="search" class="btn btn-sm btn-outline-success">검색</button>
+          <button id="reset_btn" class="btn btn-sm btn-outline-success">리셋</button>
+        </span>
+      </div>
+    </div>
+  </form>
+  <div id='page1'></div>
+  
+  <div id="list_div"></div>
+  <div id='page2'></div>
+</div>
+
+
+<script type="text/javascript">
+var package_name = "{{arg['package_name'] }}";
+var sub = "{{arg['sub']}}";
+var current_data = null;
+var last_list_option = "{{arg['scan_item_last_list_option']}}";
+var machine = "{{arg['base_machine']}}";
+
+$(document).ready(function(){
+  console.log(last_list_option);
+  tmp = last_list_option.split('|');
+  console.log(tmp.length);
+  if (tmp.length == 5) {
+    document.getElementById("order").value = tmp[0];
+    document.getElementById("keyword").value = tmp[2];
+    document.getElementById("option1").value = tmp[3];
+    document.getElementById("option2").value = tmp[4];
+    global_sub_request_search(tmp[1]);
+  } else {
+    global_sub_request_search('1');
+  }
+});
+
+
+
+$("#search").click(function(e) {
+  e.preventDefault();
+  global_sub_request_search('1');
+});
+
+$("body").on('click', '#page', function(e){
+  e.preventDefault();
+  global_sub_request_search($(this).data('page'));
+});
+
+$("body").on('click', '#reset_btn', function(e){
+  e.preventDefault();
+  document.getElementById("order").value = 'desc';
+  document.getElementById("option1").value = 'all';
+  document.getElementById("option2").value = 'all';
+  document.getElementById("keyword").value = '';
+  global_sub_request_search('1')
+});
+
+$("body").on('change', '#order', function(e){
+  global_sub_request_search('1');
+});
+
+
+function make_list(data) {
+  current_data = data;
+  str = '<table id="result_table" class="table table-sm  tableRowHover "  ><thead class="thead-dark"><tr> \
+    <th style="width:5%; text-align:center;">ID</th> \
+    <th style="width:10%; text-align:center;">시간</th> \
+    <th style="width:15%; text-align:center;">요청</th> \
+    <th style="width:15%; text-align:left;">섹션</th> \
+    <th style="width:10%; text-align:left;">상태</th> \
+    <th style="width:45%; text-align:left;">타겟</th> \
+    </tr></thead><tbody id="list">';
+  if (data.length == 0) str += '<tr><td colspan="6"><h4>검색된 데이터가 없습니다.</h4></td></tr>';
+  for(i in data) {
+    console.log(data[i]);
+    str += '<tr class="chover" style="cursor: pointer;" data-toggle="collapse" data-target="#collapse_' + i + '" aria-expanded="true" >';
+    str += '<td scope="col" style="width:5%; text-align:center;">'+ data[i].id + '</td>';
+    tmp =  (data[i].finish_time != null) ? data[i].finish_time  : '--';
+    str += '<td scope="col" style="width:10%; text-align:center;">'+ data[i].created_time + '<br>' + tmp + '</td>';
+    tmp = (data[i].mode == 'add') ? "추가" : "삭제";
+    tmp2 = (data[i].target_mode == 'file') ? "파일" : "폴더";
+    str += '<td scope="col" style="width:5%; text-align:center;">'+ tmp + ' & ' + tmp2 + '<br>' + data[i].call_from + '</td>';
+    str += '<td scope="col" style="width:10%; text-align:left;">'+ data[i].section_title + '</td>';
+    status = data[i].status;
+    if (status == 'finish_add') status = text_color("완료", 'blue') + '<span style="margin-left:10px">' + '(추가)';
+    else if (status == 'finish_add') status = text_color("완료", 'blue') + '<span style="margin-left:10px">' + '(삭제)';
+    str += '<td scope="col" style="width:10%; text-align:left;">'+ status + '</td>';      
+    buttons = '';
+    buttons += '</span><input type="button" id="kill_btn" value="KILL" class="btn btn-sm btn-danger py-0" style="font-size: 0.8em;" data-id="'+data[i].id+'"><span style="margin-left:10px"></span>';
+    buttons += '</span><input type="button" id="plex_go_btn" value="Plex" class="btn btn-sm btn-info py-0" style="font-size: 0.8em;" data-id="'+data[i].id+'"><span style="margin-left:10px"></span>';
+    buttons += '</span><input type="button" id="remove_db_btn" value="삭제" class="btn btn-sm btn-success py-0" style="font-size: 0.8em;" data-id="'+data[i].id+'"><span style="margin-left:10px"></span>';
+    str += '<td scope="col" style="width:45%; text-align:left;">' + data[i].target + '<br>' + buttons + '</td>';
+    str += '</tr>';
+  }
+  str += '</table>';
+  $("#list_div").html(str);
+}
+
+
+$("body").on('click', '#reset_btn', function(e){
+  e.preventDefault();
+  document.getElementById("order").value = 'desc';
+  document.getElementById("option1").value = 'all';
+  document.getElementById("option2").value = 'all';
+  document.getElementById("keyword").value = '';
+  global_sub_request_search('1')
+});
+
+
+
+$("body").on('click', '#all_append_files_show_btn', function(e){
+  e.preventDefault();
+  $('.collapse').collapse('show');
+
+});
+
+$("body").on('click', '#all_append_files_hide_btn', function(e){
+  e.preventDefault();
+  $('.collapse').collapse('hide');
+});
+
+$("body").on('click', '#kill_btn', function(e){
+  e.preventDefault();
+  id = $(this).data('id');
+  console.log(id);
+  global_send_command2('kill', id);
+  
+  // 확장, 축소 방지
+  return false;
+});
+
+$("body").on('click', '#remove_no_append_data_btn', function(e){
+  e.preventDefault();
+  global_send_command2('remove_no_append_data', null, null, null, null, function(ret){
+    $('#reset_btn').click();
+  });
+});
+
+
+
+
+</script> 
+
+{% endblock %}
