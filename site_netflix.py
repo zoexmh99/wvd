@@ -49,6 +49,42 @@ class SiteNetflix(SiteBase):
                 data = client.load_manifest(int(self.code))
                 Utility.write_json(json_filepath, data)
 
+            user_auth_data = {
+                'scheme': 'EMAIL_PASSWORD',
+                'authdata': {
+                    'email': ModelSetting.get('client_netflix_id'),
+                    'password': ModelSetting.get('client_netflix_pw'),
+                }
+            }
+
+            import pymsl
+            
+            import pymsl
+            import pywidevine
+            import base64, requests, sys, xmltodict
+            from requests.api import head
+
+            from pywidevine.L3.cdm import cdm, deviceconfig
+            from base64 import b64encode, b64decode
+            from pywidevine.L3.getPSSH import get_pssh
+            from pywidevine.L3.decrypt.wvdecryptcustom import WvDecrypt
+
+            a = 'AAAANHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABQIARIQAAAAAAUxc7oAAAAAAAAAAA=='
+            #b= base64.b64decode(a)
+
+            wvdecrypt = WvDecrypt(init_data_b64=a, cert_data_b64=None, device=deviceconfig.device_android_generic) 
+
+            logger.debug(wvdecrypt.session)
+            #return
+
+            client = pymsl.MslClient(user_auth_data, languages=['ko_KR'])
+            data = client.load_manifest(int(self.code))
+            c=client.get_license(wvdecrypt.get_challenge(), wvdecrypt.session.decode('ascii'))
+            logger.debug(c)
+
+
+
+
             for stream in reversed(data['result']['video_tracks'][0]['streams']):
                 if stream['content_profile'] == 'playready-h264hpl40-dash':
                     self.download_list['video'].append(self.make_filepath({'contentType':'video', 'lang':None, 'url':stream['urls'][0]['url'], 'bandwidth':stream['bitrate'], 'height':1080, 'codec_name':'H.264'}))

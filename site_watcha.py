@@ -1,7 +1,10 @@
-import os, sys, traceback, re, json, threading, time, shutil, subprocess, psutil
+import os, sys, traceback, re, json, threading, time, shutil, subprocess, psutil, requests
 from datetime import datetime
-from .site_base import SiteBase, d, logger, package_name, ModelSetting, Utility, P, webdriver, WebDriverWait, EC, By, Keys
+from .site_base import SiteBase, d, logger, package_name, ModelSetting, Utility, P, path_data, ToolBaseFile, webdriver, WebDriverWait, EC, By, Keys
 
+from pywidevine.L3.cdm import cdm, deviceconfig
+from base64 import b64encode, b64decode
+from pywidevine.L3.decrypt.wvdecryptcustom import WvDecrypt
 
 class SiteWatcha(SiteBase):
     name = 'watcha'
@@ -57,3 +60,5 @@ class SiteWatcha(SiteBase):
             P.logger.error(traceback.format_exc())
 
      
+    lic_url = 'https://lic.drmtoday.com/license-proxy-widevine/cenc/'
+    

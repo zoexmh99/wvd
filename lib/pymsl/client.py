@@ -16,6 +16,7 @@ from pymsl.exceptions import (KeyExchangeError, LicenseError,
 #['ddplus-2.0-dash', 'ddplus-5.1-dash', 'ddplus-5.1hq-dash', 'ddplus-atmos-dash'],
 DEFAULTS = {
     'esn': pymsl.utils.generate_esn('NFCDCH-02-'),
+    #'esn': 'NFANDROID2-PRV-SEI400TV-SEI=RTIVO=STREAM=4K-16836-DC732EAC275EFC013AF28DDA01B86B3B5D4056858A28B41A629E3EF1DC756B4A',
     'drm_system': 'widevine',
     'profiles': [
         'playready-h264mpl30-dash',
@@ -228,7 +229,9 @@ class MslClient:
             raise LicenseError(
                 'Manifest must be loaded before license is acquired'
             )
-
+        t = time.time()
+        timestamp = int(time.time() * 10000)
+        xid = str(timestamp + 1610)
         license_request_data = {
             'version': 2,
             'url': self.msl_session['license_path'],
@@ -238,17 +241,20 @@ class MslClient:
             'uiVersion': 'shakti-v4bf615c3',
             'clientVersion': '6.0011.511.011',
             'params': [{
-                'sessionId': session_id,
-                'clientTime': int(time.time()),
+                #'sessionId': session_id,
+                'drmSessionId': session_id,
+                'clientTime': int(timestamp/10000),
                 'challengeBase64': base64.b64encode(challenge).decode('utf8'),
-                'xid': int((int(time.time()) + 0.1612) * 1000)
+                #'xid': int((int(t) + 0.1612) * 1000)
+                'xid' : xid
             }],
-            'echo': 'sessionId'
+            'echo': 'drmSessionId'
         }
 
         request_data = self.generate_msl_request_data(license_request_data)
         resp = requests.post(
-            url=ENDPOINTS['license'],
+            #url=ENDPOINTS['license'],
+            url = 'https://www.netflix.com/nq/msl_v1/cadmium/pbo_licenses/%5E1.0.0/router?reqAttempt=1&reqPriority=20&reqName=license&clienttype=akira&uiversion=v2b73f2d8&browsername=chrome&browserversion=96.0.4664.45&osname=windows&osversion=10.0',
             data=request_data,
             proxies=self.msl_session['proxies']
         )

@@ -147,18 +147,29 @@ WidevineCrypto.decryptContentKey = async function(sesid,sdat)
     await this.initLog();
     licenseRequest = SignedMessage.read(new Pbf(sdat.licenseRequest));
     licenseResponse = SignedMessage.read(new Pbf(sdat.licenseResponse));
-    //console.log("Decrypting?")
-    //console.log("Request (from us)")
+    console.log("Decrypting?")
+    console.log("Request (from us)")
     this.log(licenseRequest)
-    //console.log("Response")
+    this.log('aaaaaaaaaaaaaaaaaa');
+    this.log(bytesToHex(licenseRequest.signature));
+    this.log(bytesToHex(licenseRequest.msg));
+    this.log(this.publicKeyVerify);
+    
+    console.log("Response")
     this.log(licenseResponse)
     if (licenseRequest.type != SignedMessage.MessageType.LICENSE_REQUEST.value) return;
 
     license = License.read(new Pbf(licenseResponse.msg));
+    console.log('bbbbbbbbbbb');
+    console.log(license);
+    console.log(bytesToHex(license.provider_client_token));
+    
+
     
     if (!this.keysInitialized) await this.initializeKeys();
     
     // make sure the signature in the license request validates under the private key
+    
     var signatureVerified = await window.crypto.subtle.verify({name: "RSA-PSS", saltLength: 20,}, this.publicKeyVerify, 
                                                               licenseRequest.signature, licenseRequest.msg)
     if (!signatureVerified)

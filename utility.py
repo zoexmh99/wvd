@@ -47,6 +47,8 @@ class Utility(object):
             if platform.system() == 'Windows':
                 if headers is not None:
                     for key, value in headers.items():
+                        if key.lower() == 'accept-encoding':
+                            continue
                         value = value.replace('"', '\\"')
                         command.append('--header="%s:%s"' % (key, value))
                 command += [f'"{url}"', '-d', os.path.dirname(filepath), '-o', os.path.basename(filepath)]
@@ -60,6 +62,7 @@ class Utility(object):
             if segment == False:
                 os.system(' '.join(command))
             else:
+                logger.warning(' '.join(command))
                 ret = ToolSubprocess.execute_command_return(command, timeout=10)
                 logger.debug(ret)
                 if ret == 'timeout':
@@ -189,6 +192,7 @@ class Utility(object):
             if os.path.exists(target):
                 return
             command = [FFMPEG, '-y', '-i', source,  target]
+            logger.warning(' '.join(command))
             os.system(' '.join(command))
         except Exception as exception: 
             logger.error('Exception:%s', exception)

@@ -1,61 +1,32 @@
-# -*- coding: utf-8 -*-
-#########################################################
-# python
-import os, sys, traceback, re, json, threading, time, shutil, subprocess, psutil, base64
+import os, sys, traceback, re, json, threading, time, shutil, subprocess, psutil, base64, requests
 from datetime import datetime
-import requests
-# third-party
-from flask import request, render_template, jsonify, redirect
-from selenium import webdriver
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support.events import EventFiringWebDriver, AbstractEventListener
-from selenium.webdriver import ActionChains
-from selenium.common.exceptions import *
-from selenium.webdriver.common.alert import Alert
-from selenium.webdriver.firefox.options import Options
-from selenium.webdriver.support.select import Select
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.by import By
 
-from tool_base import ToolBaseFile
-from browsermobproxy import Server
+from flask import render_template, jsonify
+from .plugin import P, d, logger, package_name, ModelSetting, LogicModuleBase, app, path_data, path_app_root, scheduler
+name = 'kakao'
 
-# 패키지
-from .plugin import P, d, logger, package_name, ModelSetting, LogicModuleBase, app, path_data, path_app_root
-#########################################################
-
-name = 'server'
-current_dir = os.path.dirname(__file__)
-#data_dir = os.path.join(current_dir, 'data')
-data_dir = os.path.join(path_data, package_name, 'server')
-
-class LogicServer(LogicModuleBase):
+class LogicKakao(LogicModuleBase):
     db_default = {    
-        'server_db_version' : '1',
-        'server_test_url' : '',
+        f'{name}_db_version' : '1',
+        f'{name}_interval' : '30',
+        f'{name}_auto_start' : 'False',
     }
-    
-    proxy_server = None
-    proxy = None
-    driver = None
-    current_data = None
-    stop_timestamp = None
 
     def __init__(self, P):
-        super(LogicServer, self).__init__(P, 'setting')
-        self.name = 'server'
+        super(LogicKakao, self).__init__(P, 'setting')
+        self.name = name
 
     def process_menu(self, sub, req):
         arg = P.ModelSetting.to_dict()
         arg['sub'] = self.name
         try:
+            arg['scheduler'] = str(scheduler.is_include(self.get_scheduler_name()))
+            arg['is_running'] = str(scheduler.is_running(self.get_scheduler_name()))
             return render_template(f'{package_name}_{name}_{sub}.html', arg=arg)
         except Exception as e: 
             P.logger.error('Exception:%s', e)
             P.logger.error(traceback.format_exc())
             return render_template('sample.html', title=f"{package_name}/{name}")
-
 
 
     def process_ajax(self, sub, req):
@@ -119,56 +90,12 @@ class LogicServer(LogicModuleBase):
             return jsonify({'ret':'exception', 'data':str(e)})
 
 
-    def plugin_unload(self):
-        self.driver_stop()
-        self.proxy_stop()
-    
-    """
-    def process_normal(self, sub, req):
-        if sub == 'key':
-            data = req.get_json()
-            logger.debug(json.dumps(data, indent=4))
-            if self.current_data is not None:
-                if data['url'].find(self.current_data['url']) != -1:
-                    del data['cookie']
-                    self.current_data['key'].append(data)
-                    stop_timestamp = time.time()
-                    self.video_stop_thread_start(stop_timestamp)
-                    self.stop_timestamp = stop_timestamp
-        return jsonify('success')
-    """
-
-    def process_api(self, sub, req):
-        ret = {'ret':'success'}
-        if sub == 'start':
-            url = req.form['url']
-            site = req.form['site']
-            code = req.form['code']
-            logger.warning(url)
-            if self.current_data is not None:
-                ret['ret'] = 'danger'
-                ret['msg'] = u'서버: 이전 요청을 처리중입니다. 잠시 후 다시 요청하세요.'
-            else:
-                #if self.driver is not None:
-                #    self.driver_stop()
-                self.current_data = {'site':site, 'url':url, 'key' : [], 'client_ddns' : req.form['client_ddns'], 'code':code}
-                
-                ret['msg'] = u'서버: Go Success..'
-                def func():
-                    self.chrome_driver_start(url=url)
-                    time.sleep(10)
-                    logger.debug("비디오 중단 스레드1 시작. 요청 후 10초")
-                    #stop_timestamp = time.time()
-                    #self.video_stop_thread_start(stop_timestamp)
-                    #self.stop_timestamp = stop_timestamp
-                    self.video_stop()
-                tmp = threading.Thread(target=func, args=())
-                tmp.start()
-        return jsonify(ret)
+    def scheduler_function(self):
+        logger.warning('aaa')
 
     #########################################################
     
-    """
+    
     def video_stop_thread_start(self, stop_timestamp):
         if self.driver is None:
             return
@@ -187,7 +114,6 @@ class LogicServer(LogicModuleBase):
                 logger.debug('ignore : %s', stop_timestamp)
         tmp = threading.Thread(target=func, args=())
         tmp.start()
-    """
 
     def video_stop(self):
         # 요청에 의한 시작과 키를 받아서 중단 되는게 중복 될 수 있음.
@@ -195,17 +121,7 @@ class LogicServer(LogicModuleBase):
             return
         self.current_data['har'] = self.proxy.har
         logger.debug('[서버] Driver Stop...')
-        #self.driver_stop()
-
-        from .queue_download import QueueDownload
-        for mod in QueueDownload.site_list:
-            logger.debug(mod)
-            if mod.name == self.current_data['site']:
-                mod.do_make_key(self)
-                break
-        self.current_data = None
-        #return
-
+        self.driver_stop()
         client_url = '{client_ddns}/widevine_downloader/normal/download/video_result'.format(client_ddns=self.current_data['client_ddns'])
         logger.debug(f'[서버] 결과 전송 : {client_url}')
         res = requests.post(client_url, json=self.current_data)
@@ -215,29 +131,28 @@ class LogicServer(LogicModuleBase):
 
     def chrome_driver_start(self, url=None, headless=False):
         try:
-            if self.driver is None:
-                chrome_data_path = os.path.join(data_dir, 'chrome')
-                if os.path.exists(chrome_data_path) == False:
-                    os.makedirs(chrome_data_path)
-                self.create_proxy()
-                options = webdriver.ChromeOptions()
-                options.add_argument("user-data-dir=%s" % chrome_data_path)
-                options.add_argument("--proxy-server={0}".format(self.proxy.proxy))
-                options.add_argument('--ignore-certificate-errors')
-                options.add_argument('--ignore-certificate-errors-spki-list')
+            chrome_data_path = os.path.join(data_dir, 'chrome')
+            if os.path.exists(chrome_data_path) == False:
+                os.makedirs(chrome_data_path)
+            self.create_proxy()
+            options = webdriver.ChromeOptions()
+            options.add_argument("user-data-dir=%s" % chrome_data_path)
+            options.add_argument("--proxy-server={0}".format(self.proxy.proxy))
+            options.add_argument('--ignore-certificate-errors')
+            options.add_argument('--ignore-certificate-errors-spki-list')
 
-                if headless:
-                    options.add_argument('headless')
-                    options.add_argument('window-size=1920x1080')
-                capabilities = options.to_capabilities()
-                """
-                self.driver = webdriver.Remote("http://localhost:%s" % ModelSetting.get('server_port'), capabilities)
-                #self.proxy.new_har('kakao', options={'captureHeaders': True, 'captureCookies':True, 'captureContent':True})
-                """
-                chromedriver = os.path.join(current_dir, 'server', 'chrome', 'chromedriver.exe')
-                self.driver = webdriver.Chrome(chromedriver, chrome_options=options)
+            if headless:
+                options.add_argument('headless')
+                options.add_argument('window-size=1920x1080')
+            capabilities = options.to_capabilities()
+            """
+            self.driver = webdriver.Remote("http://localhost:%s" % ModelSetting.get('server_port'), capabilities)
+            #self.proxy.new_har('kakao', options={'captureHeaders': True, 'captureCookies':True, 'captureContent':True})
+            """
+            chromedriver = os.path.join(current_dir, 'server', 'chrome', 'chromedriver.exe')
+            self.driver = webdriver.Chrome(chromedriver, chrome_options=options)
             if url is not None:
-                self.proxy.new_har(url, options={'captureHeaders': True, 'captureCookies':True, 'captureContent':True})
+                self.proxy.new_har(url, options={'captureHeaders': True})
                 self.driver.get(url)
                 from .queue_download import QueueDownload
                 for mod in QueueDownload.site_list:
@@ -246,7 +161,7 @@ class LogicServer(LogicModuleBase):
                         mod.do_driver_action(self)
                         break
             else:
-                self.proxy.new_har('test', options={'captureHeaders': True, 'captureCookies':True, 'captureContent':True})
+                self.proxy.new_har('test', options={'captureHeaders': True})
         except Exception as exception: 
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())    

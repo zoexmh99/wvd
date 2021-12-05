@@ -1,6 +1,12 @@
-import os, sys, traceback, re, json, threading, time, shutil, subprocess, psutil
+import os, sys, traceback, re, json, threading, time, shutil, subprocess, psutil, requests
+from urllib import parse
 from datetime import datetime
-from .site_base import SiteBase, d, logger, package_name, ModelSetting, Utility, P, webdriver, WebDriverWait, EC, By, Keys, ToolBaseFile
+from .site_base import SiteBase, d, logger, package_name, ModelSetting, Utility, P, path_data, ToolBaseFile, webdriver, WebDriverWait, EC, By, Keys
+
+from pywidevine.L3.cdm import cdm, deviceconfig
+from base64 import b64encode, b64decode
+from pywidevine.L3.decrypt.wvdecryptcustom import WvDecrypt
+
 
 class SiteDisney(SiteBase):
     name = 'disney'
@@ -180,3 +186,71 @@ class SiteDisney(SiteBase):
             P.logger.error('Exception:%s', e)
             P.logger.error(traceback.format_exc())
         
+
+
+
+    lic_url = 'https://disney.playback.edge.bamgrid.com/widevine/v1/obtain-license'
+    
+    #?contentId=20746859&serviceType=0&drmType=Modular&coContentId=10032788770001&deviceType=0&isTest=N
+
+    @classmethod
+    def do_make_key(cls, ins):
+        try:
+            # save
+            filepath = os.path.join(path_data, package_name, 'server', f"{ins.current_data['site']}_{ins.current_data['code']}.json")
+            if os.path.exists(filepath) == False:
+                if os.path.exists(os.path.dirname(filepath)) == False:
+                    os.makedirs(os.path.dirname(filepath))
+                logger.warning(f"저장 : {filepath}")
+                Utility.write_json(filepath, ins.current_data)
+
+            request_list = ins.current_data['har']['log']['entries']
+            pssh = None
+            postdata = {'headers':{}, 'data':{}, 'cookies':{}, 'params':{}}
+            for item in reversed(request_list):
+                if item['request']['method'] == 'GET' and item['request']['url'].find('4250k') != -1 and item['request']['url'].find('m3u8') != -1:
+                    res = cls.get_response_cls(item)
+                    pssh = cls.get_pssh(res)
+                    logger.error(pssh)
+                    break
+            for item in request_list:
+                if item['request']['method'] == 'POST' and item['request']['url'].startswith(cls.lic_url):
+                    lic_url = item['request']['url']
+                    for h in item['request']['headers']:
+                        postdata['headers'][h['name']] = h['value']
+                    for h in item['request']['queryString']:
+                        postdata['params'][h['name']] = h['value']
+
+            logger.debug(d(postdata))
+            wvdecrypt = WvDecrypt(init_data_b64=pssh, cert_data_b64=None, device=deviceconfig.device_android_generic)
+
+            widevine_license = requests.post(url=cls.lic_url, data=wvdecrypt.get_challenge(), headers=postdata['headers'], params=postdata['params'])
+            logger.debug(widevine_license)
+            #logger.debug(widevine_license.text)
+            license_b64 = b64encode(widevine_license.content)
+            wvdecrypt.update_license(license_b64)
+            correct, keys = wvdecrypt.start_process()
+            if correct:
+                for key in keys:
+                    tmp = key.split(':')
+                    ins.current_data['key'].append({'kid':tmp[0], 'key':tmp[1]})
+            logger.debug(correct)
+            logger.debug(keys)
+
+        except Exception as e: 
+            P.logger.error('Exception:%s', e)
+            P.logger.error(traceback.format_exc())
+
+
+    @classmethod
+    def get_pssh(cls, res):
+        text = res.text
+        tmps = text.split('\n')
+        for t in tmps:
+            if t.startswith('#EXT-X-KEY:METHOD=SAMPLE-AES') and t.lower().find('urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed') != -1:
+                pssh = t.split('base64,')[1].split('"')[0]
+                break
+
+
+        #EXT-X-KEY:METHOD=SAMPLE-AES,KEYID=397e6d24-df5f-4e7f-ba49-3b9cf45f5021,URI="data:text/plain;base64,AAAAS3Bzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAACsIARIQOX5tJN9fTn+6STuc9F9QIRoJY29yZXRydXN0IggyMDc0Njg1OTgA",KEYFORMAT="urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed",KEYFORMATVERSIONS="1"
+        return pssh

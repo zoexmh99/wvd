@@ -50,3 +50,4 @@ class SiteLaftel(SiteBase):
             P.logger.error('Exception:%s', e)
             P.logger.error(traceback.format_exc())
 
+    lic_url = 'https://license.pallycon.com/ri/licenseManager.do'

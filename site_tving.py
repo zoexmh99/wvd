@@ -51,11 +51,28 @@ class SiteTving(SiteBase):
 
     @classmethod
     def do_driver_action(cls, ins):
-        WebDriverWait(ins.driver, 30).until(lambda driver: driver.find_element_by_class_name('cjp-quality')).find_element_by_tag_name('button').click()
-        WebDriverWait(ins.driver, 30).until(
+        WebDriverWait(ins.driver, 5).until(lambda driver: driver.find_element_by_class_name('cjp-quality')).find_element_by_tag_name('button').click()
+        WebDriverWait(ins.driver, 5).until(
                 EC.element_to_be_clickable((By.XPATH, '//div[@class="cjp-quality-menu"]/div[1]'))
         ).click()
         ins.stop_timestamp = time.time()
 
 
-        
+    lic_url = 'https://cj.drmkeyserver.com/widevine_license'
+
+
+    @classmethod
+    def get_pssh(cls, res):
+        import xmltodict
+        xml = xmltodict.parse(res.text)
+        mpd = json.loads(json.dumps(xml))
+        logger.debug(d(mpd))
+        tracks = mpd['MPD']['Period']['AdaptationSet']
+        for video_tracks in tracks:
+            for t in video_tracks["ContentProtection"]:
+                if t['@schemeIdUri'].lower() == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed":
+                    if 'cenc:pssh' in t:
+                        pssh = t["cenc:pssh"]
+                    elif 'ns2:pssh' in t:
+                        pssh = t['ns2:pssh']
+        return pssh

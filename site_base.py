@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 #########################################################
 # python
-import os, sys, traceback, re, json, threading, time, shutil, subprocess, psutil
+import os, sys, traceback, re, json, threading, time, shutil, subprocess, psutil, requests
 from datetime import datetime
 # third-party
-import requests
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -18,11 +17,16 @@ from selenium.webdriver.common.alert import Alert
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support.select import Select
 
-
 from tool_base import d, ToolBaseFile
 
+from pywidevine.L3.cdm import cdm, deviceconfig
+from base64 import b64encode, b64decode
+from pywidevine.L3.decrypt.wvdecryptcustom import WvDecrypt
+
+
+
 # 패키지
-from .plugin import P
+from .plugin import P, path_data
 logger = P.logger
 package_name = P.package_name
 ModelSetting = P.ModelSetting
@@ -271,10 +275,11 @@ class SiteBase(object):
             for ct in ['video', 'audio']:
                 max_band = 0
                 max_item = None
-                for item in self.adaptation_set[ct][0]['representation']:
-                    if item['bandwidth'] > max_band:
-                        max_band = item['bandwidth']
-                        max_item = item
+                for adaptation_set in self.adaptation_set[ct]:
+                    for item in adaptation_set['representation']:
+                        if item['bandwidth'] > max_band:
+                            max_band = item['bandwidth']
+                            max_item = item
                 self.download_list[ct].append(self.make_filepath(max_item))                      
 
             #logger.warning(d(self.adaptation_set['text']))
@@ -345,6 +350,7 @@ class SiteBase(object):
             #logger.error(self.download_list['text'])
             for item in self.download_list['text']:
                 if os.path.exists(item['filepath_download']) == False:
+                    logger.warning(f"자막 url : {item['url']}")
                     Utility.aria2c_download(item['url'], item['filepath_download'], headers=self.mpd_headers if self.mpd_base_url is not None and item['url'].startswith(self.mpd_base_url) else {})
                 if os.path.exists(item['filepath_download']) and os.path.exists(item['filepath_merge']) == False:
                     if item['mimeType'] == 'text/ttml':
@@ -425,6 +431,7 @@ class SiteBase(object):
             headers = {}
         url = f"{prefix}{item['segment_templates']['initialization'].replace('&amp;', '&').replace('$RepresentationID$', item['id']).replace('$Bandwidth$', str(item['bandwidth']))}"
         init_filepath = os.path.join(self.temp_dir, f"{self.code}_{item['ct']}_init.m4f")
+        logger.warning(f"INIT URL : {url}")
         Utility.aria2c_download(url, init_filepath, headers=headers)
 
         start = 0
@@ -472,6 +479,19 @@ class SiteBase(object):
             P.logger.error('Exception:%s', e)
             P.logger.error(traceback.format_exc())
     
+    @classmethod
+    def get_response_cls(cls, item):
+        try:
+            headers = {}
+            for h in item['request']['headers']:
+                headers[h['name']] = h['value']
+            if item['request']['method'] == 'GET':
+                return requests.get(item['request']['url'], headers=headers)
+            elif item['request']['method'] == 'POST':
+                return requests.post(item['request']['url'], headers=headers)
+        except Exception as e: 
+            P.logger.error('Exception:%s', e)
+            P.logger.error(traceback.format_exc())
 
     # 카카오 같은 경우 iframe url로 변환
     @classmethod
@@ -482,3 +502,66 @@ class SiteBase(object):
     def do_driver_action(cls, ins):
         pass
     
+    @classmethod
+    def do_make_key(cls, ins):
+       
+        try:
+            # save
+            filepath = os.path.join(path_data, package_name, 'server', f"{ins.current_data['site']}_{ins.current_data['code']}.json")
+            if os.path.exists(filepath) == False:
+                if os.path.exists(os.path.dirname(filepath)) == False:
+                    os.makedirs(os.path.dirname(filepath))
+                logger.warning(f"저장 : {filepath}")
+                Utility.write_json(filepath, ins.current_data)
+
+            request_list = ins.current_data['har']['log']['entries']
+            pssh = None
+            postdata = {'headers':{}, 'data':{}, 'cookies':{}, 'params':{}}
+            for item in reversed(request_list):
+                if item['request']['method'] == 'GET' and item['request']['url'].find('.mpd') != -1:
+                    res = cls.get_response_cls(item)
+                    pssh = cls.get_pssh(res)
+                    logger.error(pssh)
+                    break
+            for item in request_list:
+                if item['request']['method'] == 'POST' and item['request']['url'].startswith(cls.lic_url):
+                    lic_url = item['request']['url']
+                    for h in item['request']['headers']:
+                        postdata['headers'][h['name']] = h['value']
+                    for h in item['request']['queryString']:
+                        postdata['params'][h['name']] = h['value']
+
+            logger.debug(d(postdata))
+            wvdecrypt = WvDecrypt(init_data_b64=pssh, cert_data_b64=None, device=deviceconfig.device_android_generic)
+
+            widevine_license = requests.post(url=cls.lic_url, data=wvdecrypt.get_challenge(), headers=postdata['headers'], params=postdata['params'])
+            logger.debug(widevine_license)
+            #logger.debug(widevine_license.text)
+            license_b64 = b64encode(widevine_license.content)
+            wvdecrypt.update_license(license_b64)
+            correct, keys = wvdecrypt.start_process()
+            if correct:
+                for key in keys:
+                    tmp = key.split(':')
+                    ins.current_data['key'].append({'kid':tmp[0], 'key':tmp[1]})
+            logger.debug(correct)
+            logger.debug(keys)
+
+        except Exception as e: 
+            P.logger.error('Exception:%s', e)
+            P.logger.error(traceback.format_exc())
+
+
+    @classmethod
+    def get_pssh(cls, res):
+        import xmltodict
+        xml = xmltodict.parse(res.text)
+        mpd = json.loads(json.dumps(xml))
+        logger.debug(d(mpd))
+        tracks = mpd['MPD']['Period']['AdaptationSet']
+        for video_tracks in tracks:
+            if video_tracks.get('@mimeType') == 'video/mp4' or video_tracks.get('@contentType') == 'video':
+                for t in video_tracks["ContentProtection"]:
+                    if t['@schemeIdUri'].lower() == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed":
+                        pssh = t["cenc:pssh"]
+        return pssh

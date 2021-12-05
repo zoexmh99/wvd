@@ -23,6 +23,18 @@ function SessionData(sess)
  /**
  * Gets called whenever an EME method is getting called or an EME event fires
  */
+
+  function _arrayBufferToBase64( buffer ) {
+    var binary = '';
+    var bytes = new Uint8Array( buffer );
+    var len = bytes.byteLength;
+    for (var i = 0; i < len; i++) {
+        binary += String.fromCharCode( bytes[ i ] );
+    }
+    return window.btoa( binary );
+}
+
+
 EmeInterception.onOperation = function(operationType, args,target) 
 {
     console.log(operationType);
@@ -31,13 +43,33 @@ EmeInterception.onOperation = function(operationType, args,target)
     if (operationType == "GenerateRequestCall")
     {
        // got initData
-       //console.log(args);
-       //console.log(args[1]);
+       console.log('11111111111111111111111111111111111111');
+       console.log(args);
+       console.log('123123123123123123')
+       console.log(args[1]);
+       console.log(_arrayBufferToBase64(args[1]));
+       /*
+       bytes = args[1];
+       for (var hex = [], i = 0; i < bytes.length; i++) {
+          var current = bytes[i] < 0 ? bytes[i] + 256 : bytes[i];
+          hex.push((current >>> 4).toString(16));
+          hex.push((current & 0xF).toString(16));
+      }
+      console.log(hex.join(""));
+      */
+      btoa()
+
+
     }
     else if (operationType == "MessageEvent")
     {
         var licenseRequest = args.message;
+        console.log('22222222222222222222222222');
+        console.log(licenseRequest)
+
         var sesid=args.target.sessionId;
+        console.log('33333333333333');
+        console.log(sesid);
         var licenseRequestParsed = SignedMessage.read(new Pbf(licenseRequest));
         if (licenseRequestParsed.type == SignedMessage.MessageType.LICENSE_REQUEST.value) 
         {

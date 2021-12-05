@@ -49,7 +49,7 @@ class QueueChromeRequest(object):
     def process_chrome_request(self, db_id):
         db_item = ModelWVDItem.get_by_id(db_id)
         logger.debug('process_chrome_request : %s', db_item)
-        ret = self.send_url(db_item.site, db_item.url)
+        ret = self.send_url(db_item.site, db_item.url, db_item.code)
         logger.warning(f"send url ret : {ret}")
         if ret['ret'] == 'success':
             db_item.status = 'send_url_success'
@@ -58,12 +58,12 @@ class QueueChromeRequest(object):
             self.queue.put(db_item.id)
     
     # 테스트로 호출 될 수 있음.
-    def send_url(self, site, url):
+    def send_url(self, site, url, code):
         logger.warning('QueueChromeRequest %s', url)
         for i in range(5):
             try:
                 server_url = '{server_ddns}/widevine_downloader/api/server/start'.format(server_ddns=ModelSetting.get('client_server_ddns'))
-                data={'apikey':ModelSetting.get('client_server_apikey'), 'url':url, 'client_ddns':SystemModelSetting.get('ddns'), 'site':site}
+                data={'apikey':ModelSetting.get('client_server_apikey'), 'url':url, 'client_ddns':SystemModelSetting.get('ddns'), 'site':site, 'code':code}
                 return requests.post(server_url, data=data).json()
             except Exception as e: 
                 P.logger.error('Exception:%s', e)
