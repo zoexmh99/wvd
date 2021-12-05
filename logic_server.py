@@ -203,12 +203,14 @@ class LogicServer(LogicModuleBase):
             if mod.name == self.current_data['site']:
                 mod.do_make_key(self)
                 break
-        self.current_data = None
+        #self.current_data = None
         #return
 
         client_url = '{client_ddns}/widevine_downloader/normal/download/video_result'.format(client_ddns=self.current_data['client_ddns'])
         logger.debug(f'[서버] 결과 전송 : {client_url}')
         res = requests.post(client_url, json=self.current_data)
+        logger.debug(res)
+        logger.debug(res.text)
         logger.debug(f'[서버] 결과 전송 완료 : {res.json()}')
         self.current_data = None
 

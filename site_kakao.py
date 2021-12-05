@@ -50,8 +50,8 @@ class SiteKakao(SiteBase):
     @classmethod
     def do_driver_action(cls, ins):
         try:
-            tag = WebDriverWait(ins.driver, 5).until(
-                EC.element_to_be_clickable((By.CLASS_NAME, '//*[@id="adSkipBtn"]'))
+            tag = WebDriverWait(ins.driver, 10).until(
+                EC.element_to_be_clickable((By.XPATH, '//*[@id="adSkipBtn"]'))
             ).click()
 
             tag = WebDriverWait(ins.driver, 5).until(
