@@ -205,14 +205,19 @@ class LogicServer(LogicModuleBase):
                 break
         #self.current_data = None
         #return
-
-        client_url = '{client_ddns}/widevine_downloader/normal/download/video_result'.format(client_ddns=self.current_data['client_ddns'])
-        logger.debug(f'[서버] 결과 전송 : {client_url}')
-        res = requests.post(client_url, json=self.current_data)
-        logger.debug(res)
-        logger.debug(res.text)
-        logger.debug(f'[서버] 결과 전송 완료 : {res.json()}')
-        self.current_data = None
+        try:
+            client_url = '{client_ddns}/widevine_downloader/normal/download/video_result'.format(client_ddns=self.current_data['client_ddns'])
+            logger.debug(f'[서버] 결과 전송 : {client_url}')
+            res = requests.post(client_url, json=self.current_data)
+            logger.debug(res)
+            logger.debug(res.text)
+            logger.debug(f'[서버] 결과 전송 완료 : {res.json()}')
+        except Exception as exception: 
+            logger.error('Exception:%s', exception)
+            logger.error(traceback.format_exc())  
+        finally:
+            self.driver_stop()
+            self.current_data = None
 
 
     def chrome_driver_start(self, url=None, headless=False):
