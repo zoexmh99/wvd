@@ -12,7 +12,7 @@ except:
 
 try:
     import lxml.html
-except:
+except: 
     os.system("{} install lxml".format(app.config['config']['pip']))
 
 
