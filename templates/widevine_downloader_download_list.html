@@ -167,7 +167,7 @@ function make_list(data) {
     
     str += m_col(2, tmp);
 
-    tmp = 'URL: <a href="' + data[i].url + '" target="_blank">' + data[i].url + '</a>';
+    tmp = data[i].memo+'<br>URL: <a href="' + data[i].url + '" target="_blank">' + data[i].url + '</a>';
     
     tmp2 = m_button('global_json_btn', 'JSON', [{'key':'id', 'value':data[i].id}]);
     tmp2 += m_button('global_remove_btn', '삭제', [{'key':'id', 'value':data[i].id}]);

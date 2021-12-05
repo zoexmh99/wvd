@@ -55,6 +55,8 @@ class Utility(object):
             else:
                 if headers is not None:
                     for key, value in headers.items():
+                        if key.lower() == 'accept-encoding':
+                            continue
                         value = value.replace('"', '\\"')
                         command.append('--header=%s:%s' % (key, value))
                 command += [url, '-d', os.path.dirname(filepath), '-o', os.path.basename(filepath)]

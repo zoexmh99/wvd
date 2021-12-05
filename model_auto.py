@@ -27,8 +27,9 @@ class ModelAutoItem(ModelBase):
     show_title = db.Column(db.String)
     episode_no = db.Column(db.Integer)
     episode_title = db.Column(db.String)
-    episode_free = db.Column(db.String)
+    #episode_free = db.Column(db.String)
     request_url = db.Column(db.String)
+    code = db.Column(db.String)
     data = db.Column(db.JSON)
 
     completed_time = db.Column(db.DateTime)
@@ -46,6 +47,29 @@ class ModelAutoItem(ModelBase):
         except Exception as e:
             cls.logger.error(f'Exception:{str(e)}')
             cls.logger.error(traceback.format_exc())
+
+
+    @classmethod
+    def get_request_item(cls):
+        try:
+            #return db.session.query(cls).filter_by(status='ready').filter_by(episode_free='무료').all()
+            #return db.session.query(cls).filter(and_(cls.status!='completed', cls.episode_free =='무료')).all()
+            return db.session.query(cls).filter(cls.status!='completed').all()
+        except Exception as e:
+            cls.logger.error(f'Exception:{str(e)}')
+            cls.logger.error(traceback.format_exc())
+
+
+    @classmethod
+    def get_by_site_code(cls, site, code):
+        try:
+            #return db.session.query(cls).filter_by(status='ready').filter_by(episode_free='무료').all()
+            return db.session.query(cls).filter(and_(cls.site == site, cls.code == code)).first()
+        except Exception as e:
+            cls.logger.error(f'Exception:{str(e)}')
+            cls.logger.error(traceback.format_exc())
+
+
 
     # JSON 
     @classmethod

@@ -50,9 +50,22 @@ class LogicAuto(LogicModuleBase):
     def scheduler_function(self):
         logger.warning('aaa')
         self.kakao()
+        self.auto_request()
 
     #########################################################
     
+    def auto_request(self):
+        db_items = ModelAutoItem.get_request_item()
+        queue_chrome_request = P.logic.get_module('download').queue_chrome_request
+        for db_item in db_items:
+            ret = queue_chrome_request.add_request_url(db_item.request_url, f"{db_item.show_title} - {db_item.episode_no} - {db_item.episode_title}")
+            if ret['ret'] == 'success':
+                db_item.status = 'request'
+                db_item.save()
+            else:
+                logger.warning(db_item)
+
+
     
 
 
@@ -93,10 +106,12 @@ class LogicAuto(LogicModuleBase):
                     for playlist_item in playlist_item_tags:
                         episode_entity = {}
                         episode_entity['link'] = 'https://tv.kakao.com' + playlist_item.xpath('a')[0].attrib['href']
+                        episode_entity['code'] = playlist_item.xpath('a')[0].attrib['href'].split('?')[0].split('/')[-1]
                         episode_entity['no'] = int(playlist_item.xpath('a/span[1]')[0].text)
                         episode_entity['title'] = playlist_item.xpath('a/span[3]/strong')[0].text
                         try:
                             episode_entity['pay'] = playlist_item.xpath('a/span[3]/span/span')[0].text
+                            continue
                         except:
                             episode_entity['pay'] = '무료'
                         item['episodes'].append(episode_entity)
@@ -112,13 +127,14 @@ class LogicAuto(LogicModuleBase):
                     db_item.episode_no = episode['no']
                     db_item.episode_title = episode['title']
                     db_item.request_url = episode['link']
-                    db_item.episode_free = episode['pay']
+                    #db_item.episode_free = episode['pay']
+                    db_item.code = episode['code']
                     db_item.save()
                     channel_append_count += 1
                 else:
                     break
-            if channel_append_count == 0:
-                break
+            #if channel_append_count == 0:
+            #    break
             logger.debug(d(item))
    
 

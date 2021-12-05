@@ -18,14 +18,13 @@ ModelSetting = P.ModelSetting
 from .utility import Utility
 
 
-app.config['SQLALCHEMY_BINDS']['%s_item' % package_name] = 'sqlite:///%s' % (os.path.join(path_app_root, 'data', 'db', '%s_item.db' % package_name))
 #########################################################
 
 
 class ModelWVDItem(db.Model):
     __tablename__ = '{package_name}_item'.format(package_name=package_name)
     __table_args__ = {'mysql_collate': 'utf8_general_ci'}
-    __bind_key__ = '%s_item' % package_name
+    __bind_key__ = package_name
 
     id = db.Column(db.Integer, primary_key=True)
     created_time = db.Column(db.DateTime)

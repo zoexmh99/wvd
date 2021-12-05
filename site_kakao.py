@@ -6,6 +6,7 @@ from pywidevine.L3.cdm import cdm, deviceconfig
 from base64 import b64encode, b64decode
 from pywidevine.L3.decrypt.wvdecryptcustom import WvDecrypt
 
+from .model_auto import ModelAutoItem
 class SiteKakao(SiteBase):
     name = 'kakao'
     name_on_filename = 'KK'
@@ -25,20 +26,36 @@ class SiteKakao(SiteBase):
 
     def prepare(self):
         try:
-            self.meta['content_type'] = 'show'
-            self.meta['season_number'] = 1
-            self.meta['episode_number'] = 1
-            for item in self.data['har']['log']['entries']:
-                if item['request']['method'] == 'GET' and item['request']['url'].find(f'api/v1/ft/playmeta/cliplink/{self.code}?') != -1:
-                    res = self.get_response(item)
-                    self.meta['source'] = res.json()
-                    Utility.write_json(os.path.join(self.temp_dir, f'{self.code}.meta.json'), self.meta['source'])
-                    break
-            self.meta['title'] = self.meta['source']['clipLink']['channel']['name']
-            tmp = self.meta['source']['clipLink']['displayTitle']
-            match = re.match('\d+', tmp)
-            if match:
-                self.meta['episode_number'] = int(match.group(0))
+            auto_db_item = ModelAutoItem.get_by_site_code(self.name, self.code)
+            logger.warning(auto_db_item)
+
+            if auto_db_item != None:
+                self.meta['content_type'] = 'show'
+                self.meta['season_number'] = 1
+                self.meta['episode_number'] = auto_db_item.episode_no
+                self.meta['title'] = auto_db_item.show_title
+                if self.meta['title'] == '찐경규':
+                    self.meta['episode_number'] += -1
+                elif self.meta['title'] == '안소희':
+                    self.meta['episode_number'] += 1
+            else:    
+                self.meta['content_type'] = 'show'
+                self.meta['season_number'] = 1
+                self.meta['episode_number'] = 1
+                for item in self.data['har']['log']['entries']:
+                    if item['request']['method'] == 'GET' and item['request']['url'].find(f'api/v1/ft/playmeta/cliplink/{self.code}?') != -1:
+                        res = self.get_response(item)
+                        self.meta['source'] = res.json()
+                        Utility.write_json(os.path.join(self.temp_dir, f'{self.code}.meta.json'), self.meta['source'])
+                        break
+                self.meta['title'] = self.meta['source']['clipLink']['channel']['name']
+                tmp = self.meta['source']['clipLink']['displayTitle']
+                match = re.match('\d+', tmp)
+                if match:
+                    self.meta['episode_number'] = int(match.group(0))
+                log = f"제목: [{self.meta['title']}] 시즌:[{self.meta['season_number']}], 에피:[{self.meta['episode_number']}]"
+                logger.debug(log)
+                self.add_log(log)
             log = f"제목: [{self.meta['title']}] 시즌:[{self.meta['season_number']}], 에피:[{self.meta['episode_number']}]"
             logger.debug(log)
             self.add_log(log)
