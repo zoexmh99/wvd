@@ -12,7 +12,7 @@ class SiteKakao(SiteBase):
     name_on_filename = 'KK'
     url_regex = re.compile(r'kakao\.com\/channel\/\d+\/cliplink\/(?P<code>.*?)($|\?)')
     request_url_regex = re.compile(r'kakao\.com\/embed\/player\/cliplink\/(?P<code>.*?)\?')
-    
+    auto_video_stop = False
     def __init__(self, db_id, json_filepath):
         super(SiteKakao, self).__init__(db_id, json_filepath)
         
@@ -80,11 +80,13 @@ class SiteKakao(SiteBase):
             )
             time.sleep(2)
             tag.click()
+            time.sleep(2)
             #ins.stop_timestamp = time.time()
         except Exception as e: 
             P.logger.error(f'Exception:{str(e)}')
             P.logger.error(traceback.format_exc())
 
+        ins.video_stop()
 
 
     @classmethod
