@@ -35,6 +35,7 @@ from .model import ModelWVDItem
 from mpegdash.parser import MPEGDASHParser
 
 class SiteBase(object):
+    auto_stop = True
     def __init__(self, db_id, json_filepath):
         
         self.db_id = db_id
@@ -557,7 +558,7 @@ class SiteBase(object):
         import xmltodict
         xml = xmltodict.parse(res.text)
         mpd = json.loads(json.dumps(xml))
-        logger.debug(d(mpd))
+        #logger.debug(d(mpd))
         tracks = mpd['MPD']['Period']['AdaptationSet']
         for video_tracks in tracks:
             if video_tracks.get('@mimeType') == 'video/mp4' or video_tracks.get('@contentType') == 'video':

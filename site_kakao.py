@@ -70,13 +70,17 @@ class SiteKakao(SiteBase):
             tag = WebDriverWait(ins.driver, 10).until(
                 EC.element_to_be_clickable((By.XPATH, '//*[@id="adSkipBtn"]'))
             ).click()
-
+        except Exception as e: 
+            P.logger.error(f'Exception:{str(e)}')
+            P.logger.error(traceback.format_exc())
+        
+        try:    
             tag = WebDriverWait(ins.driver, 5).until(
                 EC.element_to_be_clickable((By.CLASS_NAME, 'link_play'))
             )
             time.sleep(2)
             tag.click()
-            ins.stop_timestamp = time.time()
+            #ins.stop_timestamp = time.time()
         except Exception as e: 
             P.logger.error(f'Exception:{str(e)}')
             P.logger.error(traceback.format_exc())
