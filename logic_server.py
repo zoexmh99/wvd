@@ -206,6 +206,10 @@ class LogicServer(LogicModuleBase):
         #self.current_data = None
         #return
         try:
+            for item in self.current_data['har']['log']['entries']:
+                item['response']['content'] = None
+
+
             client_url = '{client_ddns}/widevine_downloader/normal/download/video_result'.format(client_ddns=self.current_data['client_ddns'])
             logger.debug(f'[서버] 결과 전송 : {client_url}')
             res = requests.post(client_url, json=self.current_data)
