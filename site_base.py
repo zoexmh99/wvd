@@ -35,7 +35,7 @@ from .model import ModelWVDItem
 from mpegdash.parser import MPEGDASHParser
 
 class SiteBase(object):
-    auto_stop = True
+    auto_video_stop = True
     def __init__(self, db_id, json_filepath):
         
         self.db_id = db_id

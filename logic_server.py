@@ -161,10 +161,13 @@ class LogicServer(LogicModuleBase):
                     #stop_timestamp = time.time()
                     #self.video_stop_thread_start(stop_timestamp)
                     #self.stop_timestamp = stop_timestamp
+                    if self.current_data is None:
+                        return
                     from .queue_download import QueueDownload
                     for mod in QueueDownload.site_list:
-                        if mod.name == self.current_data['site'] and mod.auto_stop:
-                            self.video_stop()
+                        if mod.name == self.current_data['site']:
+                            if mod.auto_video_stop:
+                                self.video_stop()
                             break
                     
                 tmp = threading.Thread(target=func, args=())
