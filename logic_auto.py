@@ -63,7 +63,11 @@ class LogicAuto(LogicModuleBase):
                 db_item.status = 'request'
                 db_item.save()
             else:
-                logger.warning(db_item)
+                if ret['db'] == 'exist' and ret['status'] == 'completed':
+                    db_item.status = 'completed'
+                    db_item.save()
+                else:
+                    logger.warning(db_item)
 
 
     

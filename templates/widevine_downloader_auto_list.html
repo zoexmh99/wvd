@@ -110,10 +110,15 @@ function make_list(data) {
     console.log(data[i]);
     str += '<tr class="chover" style="cursor: pointer;" data-toggle="collapse" data-target="#collapse_' + i + '" aria-expanded="true" >';
     str += '<td scope="col" style="width:5%; text-align:center;">'+ data[i].id + '</td>';
-    tmp =  (data[i].finish_time != null) ? data[i].finish_time  : '--';
-    str += '<td scope="col" style="width:10%; text-align:center;">'+ data[i].created_time + '<br>' + tmp + '</td>';
-    tmp = (data[i].mode == 'add') ? "추가" : "삭제";
-    tmp2 = (data[i].target_mode == 'file') ? "파일" : "폴더";
+    //tmp =  (data[i].finish_time != null) ? data[i].finish_time  : '--';
+    str += '<td scope="col" style="width:10%; text-align:center;">'+ data[i].created_time + '</td>';
+    //tmp = (data[i].mode == 'add') ? "추가" : "삭제";
+    //tmp2 = (data[i].target_mode == 'file') ? "파일" : "폴더";
+    str += '<td scope="col" style="width:5%; text-align:center;">'+ data[i].show_title +  '</td>';
+    str += '<td scope="col" style="width:5%; text-align:center;">'+ data[i].episode_no +  '</td>';
+    str += '<td scope="col" style="width:5%; text-align:center;">'+ data[i].status +  '</td>';
+
+
     str += '<td scope="col" style="width:5%; text-align:center;">'+ data[i].status + ' & ' + data[i].show_title + '<br>' + data[i].call_from + '</td>';
     str += '<td scope="col" style="width:10%; text-align:left;">'+ data[i].section_title + '</td>';
     status = data[i].status;

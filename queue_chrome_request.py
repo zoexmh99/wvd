@@ -121,7 +121,7 @@ class QueueChromeRequest(object):
                 ret = {'ret':'success', 'msg':u'URL을 추가하였습니다.'}
                 self.queue.put(db_item.id)
             else:
-                ret = {'ret':'warning', 'msg':u'이미 같은 코드가 목록에 있습니다.', 'db':'exist', 'status':db_item.status}
+                ret = {'ret':'warning', 'msg':u'이미 같은 코드가 목록에 있습니다.', 'db':'exist', 'status':tmp.status}
         else:
             ret = {'ret':'warning', 'msg':u'처리할 수 없는 URL입니다.'}
         return ret
