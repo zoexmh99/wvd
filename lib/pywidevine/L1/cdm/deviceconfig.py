@@ -10,7 +10,21 @@ device_android_generic = {
     'send_key_control_nonce': True
 }
 
-devices_available = [device_android_generic]
+
+
+#[{"code":"bad-license-request","description":"Errors::DRM_DEVICE_CERTIFICATE_REVOKED: device-certificate-revoked"}]
+device_nvidiashield_lvl1 = {
+    'name': 'nvidiashield_lvl1',
+    'description': 'nvidashield firmware 7.2.3 lvl1 security level',
+    'security_level': 1,
+    'session_id_type': 'android',
+    'private_key_available': True,
+    'vmp': False,
+    'send_key_control_nonce': True
+}
+
+devices_available = [device_android_generic, device_nvidiashield_lvl1]
+
 
 FILES_FOLDER = 'devices'
 

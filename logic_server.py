@@ -284,15 +284,20 @@ class LogicServer(LogicModuleBase):
         if self.proxy is not None:
             return
         
-        self.proxy_server = Server(path=os.path.join(current_dir, 'server', 'browsermob-proxy-2.1.4', 'bin', 'browsermob-proxy.bat'), options={'port':52300})
+        #self.proxy_server = Server(path=os.path.join(current_dir, 'server', 'browsermob-proxy-2.1.4', 'bin', 'browsermob-proxy.bat'), options={'port':42301})
+        self.proxy_server = Server(path=os.path.join(current_dir, 'server', 'browsermob-proxy-2.1.4', 'bin', 'browsermob-proxy.bat'), options={'port':52100})
         self.proxy_server.start()
         logger.debug('proxy server start!!')
         time.sleep(1)
-        try:
-            self.proxy = self.proxy_server.create_proxy(params={'trustAllServers':'true'})
-        except:
-            time.sleep(2)
-            self.proxy = self.proxy_server.create_proxy(params={'trustAllServers':'true'})
+        while True:
+            try:
+                self.proxy = self.proxy_server.create_proxy(params={'trustAllServers':'true'})
+                break
+            except Exception as exception: 
+                logger.error('Exception:%s', exception)
+                logger.error(traceback.format_exc())    
+                time.sleep(2)
+                #self.proxy = self.proxy_server.create_proxy(params={'trustAllServers':'true'})
         time.sleep(1)
         logger.debug('proxy : %s', self.proxy.proxy)
         #logger.debug('proxy : %s', self.proxy.har)
