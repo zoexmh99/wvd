@@ -58,16 +58,14 @@ class SiteNetflix(SiteBase):
             }
 
             import pymsl
-            
-            import pymsl
             import pywidevine
             import base64, requests, sys, xmltodict
             from requests.api import head
 
-            from pywidevine.L3.cdm import cdm, deviceconfig
+            from pywidevine.cdm import cdm, deviceconfig
             from base64 import b64encode, b64decode
-            from pywidevine.L3.getPSSH import get_pssh
-            from pywidevine.L3.decrypt.wvdecryptcustom import WvDecrypt
+            from pywidevine.getPSSH import get_pssh
+            from pywidevine.decrypt.wvdecryptcustom import WvDecrypt
 
             a = 'AAAANHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABQIARIQAAAAAAUxc7oAAAAAAAAAAA=='
             #b= base64.b64decode(a)

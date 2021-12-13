@@ -19,9 +19,9 @@ from selenium.webdriver.support.select import Select
 
 from tool_base import d, ToolBaseFile
 
-from pywidevine.L3.cdm import cdm, deviceconfig
+from pywidevine.cdm import cdm, deviceconfig
 from base64 import b64encode, b64decode
-from pywidevine.L3.decrypt.wvdecryptcustom import WvDecrypt
+from pywidevine.decrypt.wvdecryptcustom import WvDecrypt
 
 
 
