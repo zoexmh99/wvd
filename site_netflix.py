@@ -70,7 +70,7 @@ class SiteNetflix(SiteBase):
             a = 'AAAANHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABQIARIQAAAAAAUxc7oAAAAAAAAAAA=='
             #b= base64.b64decode(a)
 
-            wvdecrypt = WvDecrypt(init_data_b64=a, cert_data_b64=None, device=deviceconfig.device_chromecdm_2209) 
+            wvdecrypt = WvDecrypt(init_data_b64=a, cert_data_b64=None, device=deviceconfig.device_android_generic) 
 
             logger.debug(wvdecrypt.session)
             #return
