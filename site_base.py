@@ -533,7 +533,7 @@ class SiteBase(object):
                         postdata['params'][h['name']] = h['value']
 
             logger.debug(d(postdata))
-            wvdecrypt = WvDecrypt(init_data_b64=pssh, cert_data_b64=None, device=deviceconfig.device_android_generic)
+            wvdecrypt = WvDecrypt(init_data_b64=pssh, cert_data_b64=None, device=deviceconfig.device_chromecdm_2209)
 
             widevine_license = requests.post(url=cls.lic_url, data=wvdecrypt.get_challenge(), headers=postdata['headers'], params=postdata['params'])
             logger.debug(widevine_license)

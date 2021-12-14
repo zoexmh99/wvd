@@ -130,7 +130,7 @@ class SiteKakao(SiteBase):
                     break
             
             logger.debug(postdata)
-            wvdecrypt = WvDecrypt(init_data_b64=pssh, cert_data_b64=None, device=deviceconfig.device_android_generic) 
+            wvdecrypt = WvDecrypt(init_data_b64=pssh, cert_data_b64=None, device=deviceconfig.device_chromecdm_2209) 
 
             payload = wvdecrypt.get_challenge()
             payload = b64encode(payload)
