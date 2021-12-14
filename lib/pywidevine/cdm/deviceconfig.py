@@ -10,7 +10,18 @@ device_android_generic = {
     'send_key_control_nonce': True
 }
 
-devices_available = [device_android_generic]
+device_chromecdm_2209 = {
+    'name': 'chromecdm_2209',
+    'description': 'chrome cdm windows 2209',
+    'security_level': 3,
+    'session_id_type': 'chrome',
+    'private_key_available': False,
+    'vmp': True,
+    'send_key_control_nonce': False
+}
+
+
+devices_available = [device_android_generic, device_chromecdm_2209]
 
 FILES_FOLDER = 'devices'
 

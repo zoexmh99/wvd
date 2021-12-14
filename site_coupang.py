@@ -108,7 +108,7 @@ class SiteCoupang(SiteBase):
             logger.debug(params)
             logger.debug(cookies)
 
-            wvdecrypt = WvDecrypt(init_data_b64=pssh, cert_data_b64=None, device=deviceconfig.device_android_generic)            
+            wvdecrypt = WvDecrypt(init_data_b64=pssh, cert_data_b64=None, device=deviceconfig.device_chromecdm_2209)            
             widevine_license = requests.post(url=lic_url, data=wvdecrypt.get_challenge(), headers=headers, params=params, cookies=cookies)
             #logger.debug(widevine_license)
             #logger.debug(widevine_license.text)
