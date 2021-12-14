@@ -12,6 +12,7 @@ from pywidevine.cdm.session import Session
 from pywidevine.cdm.key import Key
 from Cryptodome.Random import get_random_bytes
 from Cryptodome.Random import random
+from Cryptodome import Random
 from Cryptodome.Cipher import PKCS1_OAEP, AES
 from Cryptodome.Hash import CMAC, SHA256, HMAC, SHA1
 from Cryptodome.PublicKey import RSA
@@ -130,6 +131,12 @@ class Cdm:
 
         return 0
 
+
+    def sign_license_request(self,data):
+        em=binascii.b2a_hex((pss._EMSA_PSS_ENCODE(data,2047,Random.get_random_bytes,lambda x, y: pss.MGF1(x, y, data),20)))
+        sig=cdmapi.encrypt(em.decode('utf-8'))
+        return (binascii.a2b_hex(sig))
+
     def get_license_request(self, session_id):
         self.logger.debug("get_license_request(session_id={})".format(session_id))
         self.logger.info("getting license request")
@@ -224,12 +231,18 @@ class Cdm:
              session.device_key = key
         else:
              self.logger.error("need device private key, other methods unimplemented")
-             return 1
+             # cdmapi
+             #return 1
 
         self.logger.debug("signing license request")
 
         hash = SHA1.new(license_request.Msg.SerializeToString())
-        signature = pss.new(key).sign(hash)
+        #signature = pss.new(key).sign(hash)
+        # cdmapi
+        if(session.device_key is not None):
+            signature = pss.new(key).sign(hash)
+        else:
+            signature=self.sign_license_request(hash)
 
         license_request.Signature = signature
 
