@@ -28,13 +28,13 @@ class P(object):
                 ['setting', '설정'], ['list', '목록'], 
             ],
             'manual' : [
-                ['README.md', 'README'], ['etc/site.md', '사이트별 특징'], 
+                ['README.md', 'README'], ['site.md', '사이트별 특징'], 
             ],
         }
     }  
 
     plugin_info = {
-        'version' : '1.1.2',
+        'version' : '1.2',
         'name' : package_name,
         'category_name' : 'tool',
         'icon' : '',
@@ -43,6 +43,13 @@ class P(object):
         'home' : 'https://github.com/soju6jan/%s' % package_name,
         'more' : '',
         'policy_level' : 5,
+        'dependency' : [
+            {   
+                'name' : 'lib_chromedriver_with_browsermob',
+                'home' : 'https://github.com/soju6jan/lib_chromedriver_with_browsermob',
+            }
+        ]
+
     }
 
     ModelSetting = get_model_setting(package_name, logger)

@@ -2,9 +2,6 @@ import os, sys, traceback, re, json, threading, time, shutil, subprocess, psutil
 from datetime import datetime
 from .site_base import SiteBase, d, logger, package_name, ModelSetting, Utility, P, path_data, ToolBaseFile, webdriver, WebDriverWait, EC, By, Keys
 
-from pywidevine.cdm import cdm, deviceconfig
-from base64 import b64encode, b64decode
-from pywidevine.decrypt.wvdecryptcustom import WvDecrypt
 
 from .model_auto import ModelAutoItem
 class SiteKakao(SiteBase):
@@ -67,7 +64,7 @@ class SiteKakao(SiteBase):
     @classmethod
     def do_driver_action(cls, ins):
         try:
-            tag = WebDriverWait(ins.driver, 10).until(
+            tag = WebDriverWait(ins.dm.driver, 10).until(
                 EC.element_to_be_clickable((By.XPATH, '//*[@id="adSkipBtn"]'))
             ).click()
         except Exception as e: 
@@ -75,7 +72,7 @@ class SiteKakao(SiteBase):
             P.logger.error(traceback.format_exc())
         
         try:    
-            tag = WebDriverWait(ins.driver, 5).until(
+            tag = WebDriverWait(ins.dm.driver, 5).until(
                 EC.element_to_be_clickable((By.CLASS_NAME, 'link_play'))
             )
             time.sleep(2)
@@ -87,7 +84,7 @@ class SiteKakao(SiteBase):
             P.logger.error(traceback.format_exc())
 
         try:
-            tag = WebDriverWait(ins.driver, 10).until(
+            tag = WebDriverWait(ins.dm.driver, 10).until(
                 EC.element_to_be_clickable((By.XPATH, '//*[@id="adSkipBtn"]'))
             ).click()
             time.sleep(5)
@@ -100,6 +97,10 @@ class SiteKakao(SiteBase):
 
     @classmethod
     def do_make_key(cls, ins):
+        from pywidevine.cdm import cdm, deviceconfig
+        from base64 import b64encode, b64decode
+        from pywidevine.decrypt.wvdecryptcustom import WvDecrypt
+
         try:
             # save
             filepath = os.path.join(path_data, package_name, 'server', f"{ins.current_data['site']}_{ins.current_data['code']}.json")
@@ -118,7 +119,7 @@ class SiteKakao(SiteBase):
                 if item['request']['method'] == 'GET' and item['request']['url'].find('.mpd') != -1:
                     res = cls.get_response_cls(item)
                     pssh = cls.get_pssh(res)
-                    logger.error(pssh)
+                    #logger.error(pssh)
                     #break
                 elif item['request']['method'] == 'POST' and item['request']['url'].startswith(lic_url):
                     for h in item['request']['headers']:
@@ -129,7 +130,7 @@ class SiteKakao(SiteBase):
                 if pssh is not None and len(postdata['headers'].keys()) > 0:
                     break
             
-            logger.debug(postdata)
+            #logger.debug(postdata)
             wvdecrypt = WvDecrypt(init_data_b64=pssh, cert_data_b64=None, device=deviceconfig.device_android_generic) 
 
             payload = wvdecrypt.get_challenge()
@@ -149,6 +150,7 @@ class SiteKakao(SiteBase):
                     ins.current_data['key'].append({'kid':tmp[0], 'key':tmp[1]})
             logger.debug(correct)
             logger.debug(keys)
+            #time.sleep(10000)
         except Exception as e: 
             P.logger.error(f'Exception:{str(e)}')
             P.logger.error(traceback.format_exc())

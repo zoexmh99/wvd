@@ -293,7 +293,7 @@ class SiteBase(object):
                         item['url'] = item['url'].replace('&amp;', '&')
                         #logger.error(item['url'])
                         self.download_list['text'].append(self.make_filepath(item))
-            logger.warning(d(self.download_list))
+            #logger.warning(d(self.download_list))
         except Exception as e: 
             P.logger.error('Exception:%s', e)
             P.logger.error(traceback.format_exc())
@@ -432,7 +432,7 @@ class SiteBase(object):
             headers = {}
         url = f"{prefix}{item['segment_templates']['initialization'].replace('&amp;', '&').replace('$RepresentationID$', item['id']).replace('$Bandwidth$', str(item['bandwidth']))}"
         init_filepath = os.path.join(self.temp_dir, f"{self.code}_{item['ct']}_init.m4f")
-        logger.warning(f"INIT URL : {url}")
+        #logger.warning(f"INIT URL : {url}")
         Utility.aria2c_download(url, init_filepath, headers=headers)
 
         start = 0
@@ -505,15 +505,16 @@ class SiteBase(object):
     
     @classmethod
     def do_make_key(cls, ins):
-       
         try:
             # save
+            """
             filepath = os.path.join(path_data, package_name, 'server', f"{ins.current_data['site']}_{ins.current_data['code']}.json")
             if os.path.exists(filepath) == False:
                 if os.path.exists(os.path.dirname(filepath)) == False:
                     os.makedirs(os.path.dirname(filepath))
                 logger.warning(f"저장 : {filepath}")
                 Utility.write_json(filepath, ins.current_data)
+            """
 
             request_list = ins.current_data['har']['log']['entries']
             pssh = None
@@ -522,7 +523,7 @@ class SiteBase(object):
                 if item['request']['method'] == 'GET' and item['request']['url'].find('.mpd') != -1:
                     res = cls.get_response_cls(item)
                     pssh = cls.get_pssh(res)
-                    logger.error(pssh)
+                    #logger.error(pssh)
                     break
             for item in request_list:
                 if item['request']['method'] == 'POST' and item['request']['url'].startswith(cls.lic_url):
@@ -532,9 +533,10 @@ class SiteBase(object):
                     for h in item['request']['queryString']:
                         postdata['params'][h['name']] = h['value']
 
-            logger.debug(d(postdata))
+            #logger.debug(d(postdata))
             wvdecrypt = WvDecrypt(init_data_b64=pssh, cert_data_b64=None, device=deviceconfig.device_android_generic)
-
+            #logger.debug(postdata['headers'])
+            #logger.debug(postdata['params'])
             widevine_license = requests.post(url=cls.lic_url, data=wvdecrypt.get_challenge(), headers=postdata['headers'], params=postdata['params'])
             logger.debug(widevine_license)
             #logger.debug(widevine_license.text)
@@ -564,5 +566,13 @@ class SiteBase(object):
             if video_tracks.get('@mimeType') == 'video/mp4' or video_tracks.get('@contentType') == 'video':
                 for t in video_tracks["ContentProtection"]:
                     if t['@schemeIdUri'].lower() == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed":
-                        pssh = t["cenc:pssh"]
-        return pssh
+                        if 'cenc:pssh' in t:
+                            return t["cenc:pssh"]
+
+        for video_tracks in tracks:
+                for t in video_tracks["ContentProtection"]:
+                    if t['@schemeIdUri'].lower() == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed":
+                        if 'cenc:pssh' in t:
+                            return t["cenc:pssh"]
+                        elif 'ns2:pssh' in t:
+                            return t['ns2:pssh']

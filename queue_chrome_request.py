@@ -48,7 +48,7 @@ class QueueChromeRequest(object):
 
     def process_chrome_request(self, db_id):
         db_item = ModelWVDItem.get_by_id(db_id)
-        logger.debug('process_chrome_request : %s', db_item)
+        #logger.debug('process_chrome_request : %s', db_item)
         ret = self.send_url(db_item.site, db_item.url, db_item.code)
         logger.warning(f"send url ret : {ret}")
         if ret['ret'] == 'success':

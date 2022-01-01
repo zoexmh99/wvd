@@ -1,7 +1,7 @@
 import os
 
 device_android_generic = {
-    'name': 'broadcom_lvl1',
+    'name': 'sm-n916s',
     'description': 'android studio cdm',
     'security_level': 3,
     'session_id_type': 'android',

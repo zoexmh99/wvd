@@ -64,7 +64,7 @@ class Utility(object):
             if segment == False:
                 os.system(' '.join(command))
             else:
-                logger.warning(' '.join(command))
+                #logger.warning(' '.join(command))
                 ret = ToolSubprocess.execute_command_return(command, timeout=10)
                 logger.debug(ret)
                 if ret == 'timeout':
