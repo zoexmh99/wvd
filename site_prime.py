@@ -1,6 +1,15 @@
-import os, sys, traceback, re, json, threading, time, shutil, subprocess, psutil
+import os, sys, traceback, re, json, threading, time, shutil, subprocess, psutil, requests
 from datetime import datetime
 from .site_base import SiteBase, d, logger, package_name, ModelSetting, Utility, P
+from base64 import b64decode
+
+
+from pywidevine.cdm import cdm, deviceconfig
+from base64 import b64encode, b64decode
+from pywidevine.decrypt.wvdecryptcustom import WvDecrypt
+
+
+
 
 class SitePrime(SiteBase):
     name = 'prime'
@@ -86,4 +95,73 @@ class SitePrime(SiteBase):
         except Exception as e: 
             P.logger.error('Exception:%s', e)
             P.logger.error(traceback.format_exc())
-        
+
+
+    @classmethod
+    def do_make_key(cls, ins):
+        try:
+            # save
+            """
+            filepath = os.path.join(path_data, package_name, 'server', f"{ins.current_data['site']}_{ins.current_data['code']}.json")
+            if os.path.exists(filepath) == False:
+                if os.path.exists(os.path.dirname(filepath)) == False:
+                    os.makedirs(os.path.dirname(filepath))
+                logger.warning(f"저장 : {filepath}")
+                Utility.write_json(filepath, ins.current_data)
+            """
+
+            request_list = ins.current_data['har']['log']['entries']
+            pssh = None
+            postdata = {'headers':{}, 'data':{}, 'cookies':{}, 'params':{}}
+            for item in reversed(request_list):
+                if item['request']['method'] == 'GET' and item['request']['url'].find('.mpd') != -1:
+                    res = cls.get_response_cls(item)
+                    pssh = cls.get_pssh(res)
+                    pssh = b64decode(pssh).decode('utf8')
+                    logger.error(pssh)
+                    break
+            
+            for item in request_list:
+                if item['request']['method'] == 'POST' and item['request']['url'].find('GetPlaybackResources'):
+                    if 'postData' not in item['request'] or 'params' not in item['request']['postData']:
+                        continue
+                    lic_url = item['request']['url']
+                    for h in item['request']['headers']:
+                        postdata['headers'][h['name']] = h['value']
+                    for h in item['request']['queryString']:
+                        postdata['params'][h['name']] = h['value']
+                    for h in item['request']['postData']['params']:
+                        if h['name'].strip() == '':
+                            continue
+                        postdata['data'][h['name']] = h['value']
+                    if 'widevine2Challenge' in postdata['data'] and len(postdata['data']['widevine2Challenge']) > 10:
+                        break
+            
+            logger.debug(d(postdata))
+            #pssh = 'AAAAIHBzc2gAAAAALn2XreThTQOfefFKt3gaUgAAAAA='
+            wvdecrypt = WvDecrypt(init_data_b64=pssh, cert_data_b64=None, device=deviceconfig.device_android_generic)
+            logger.debug(postdata['headers'])
+            logger.debug(postdata['params'])
+            chal = wvdecrypt.get_challenge()
+            tmp = b64encode(chal).decode('utf8')
+            logger.debug(tmp)
+            
+            postdata['data']['widevine2Challenge'] = tmp
+            logger.error(lic_url)
+            logger.error(postdata['data'])
+            widevine_license = requests.post(url=lic_url, data=postdata['data'], headers=postdata['headers'])
+            logger.debug(widevine_license)
+            logger.debug(widevine_license.text)
+            license_b64 = b64encode(widevine_license.content)
+            wvdecrypt.update_license(license_b64)
+            correct, keys = wvdecrypt.start_process()
+            if correct:
+                for key in keys:
+                    tmp = key.split(':')
+                    ins.current_data['key'].append({'kid':tmp[0], 'key':tmp[1]})
+            logger.debug(correct)
+            logger.debug(keys)
+
+        except Exception as e: 
+            P.logger.error('Exception:%s', e)
+            P.logger.error(traceback.format_exc())
